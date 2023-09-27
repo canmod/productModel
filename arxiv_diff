@@ -1,0 +1,6 @@
+#!/bin/bash
+diff -c tmp0.tex tmp.tex >arxiv_diff.patch
+
+
+
+

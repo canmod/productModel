@@ -1,0 +1,135 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{xcolor}
+\usepackage{biblatex}
+\addbibresource{biblio.bib}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Nset}[1]{\mathbb{N}_{#1}}
+\newcommand{\Rnn}{\mathbb{R}_{\ge 0}}
+\newcommand{\abs}[1]{\lvert #1 \rvert}
+\newcommand{\pwrst}[1]{\mathbb{P}(#1)}
+\newcommand{\pif}[2]{\mathfrak{F}(#1, #2)}
+
+\title{Notes on Bookkeeping Implementations}
+
+\begin{document}
+
+\maketitle
+\section{General Ideas}
+
+Structured models contain multiple sub-models. For example, an SEIR model and a vaccination status model can combine to produce a structured model where each SEIR box is split into two boxes -- unvaccinated and vaccinated. This additional model structure could potentially require variation of parameters over the vaccination categories. For example, recovery rate might be different for vaccinated and unvaccinated individuals.
+
+\subsection{SEIR}
+
+To get more specific consider the three rates in the base SEIR model. These rates are the force of infection,
+
+$$
+S \rightarrow E = \frac{\beta I}{N}
+$$
+
+inverse latency period,
+
+$$
+E \rightarrow I = \alpha
+$$
+
+and recovery rate,
+$$
+I \rightarrow R = \gamma
+$$
+
+\subsection{SEIR+VAX}
+
+When we add vaccination, the rates $\text{state-from} \rightarrow \text{state-to}$ become vectors of length equal to the number of vaccination statuses. This means that the rate equations need to become vector equations.  For latency and recovery we have two simple options -- have a vector with constant rates or have different rates for each vaccination status.
+
+The force of infection case is more difficult. The $\beta$ parameter can still be handled in this simple way of just collecting different values for different vaccination statuses in a vector. But now $I$ is also a vector, containing one element for each status. So we need to decide how to combine them -- element-wise multiplication, inner product, something else? We could get even more complex by providing a different value of $\beta$ for each combination of $S$ and $I$, which would produce a matrix of $\beta$ values. This matrix would give the transmission rate from infected individuals of a particular vaccination status to susceptible individuals of a potentially different vaccination status.
+
+To start writing down these different possible models we need some matrix and vector notation. At a high-level we want to compute the vector-valued force of infection, $y$, as a function of the vector of state variables, $x$, and the parameters, $\theta$.
+
+$$
+y = f(x, \theta)
+$$
+
+The force of infection vector, $y$, has structure and is indexed by vaccination status. So for example, $y_U$ and $y_V$ are the forces of infection for unvaccinated and vaccinated individuals respectively.
+
+The state vector, $x$, also has structure and is indexed by both epidemiological and vaccination status. So for example $x_{S,U}$ is the element of $x$ giving the numbers of unvaccinated susceptible individuals. Even though we could use two indices to define a matrix of states, we choose to keep it as a vector with two indices -- this decision will hopefully become clear when we generalize the theory. We also abuse this notation by defining $x_{\text{from}}$ and $x_{\text{to}}$ to be the vectors of from-to pairs of states involved in a particular mechanism of state transition. We can continue this strategy to identify the states involved in the indirect effects. In even this simple case there are two different sets of indirect effects. The first set is the effect of $x_{I,U}$ and $x_{I,V}$ on the forces of infection. We can refer to these states collectively as the vector, $x_I$. The second set is the effect of all states in the denominator, but we already have a way to refer to all states as $x$. In summary we have four subsets of the state vector involved in the calculation of the force of infection vector: $x_{\text{from}}$, $x_{\text{to}}$, $x_I$, and $x$.
+
+The structure of the parameter vector, $\theta$, is more complex, and is determined by the structure of the subsets of $x$ involved in the force of infection calculation. These subsets are defined by the index sets. 
+
+$$
+\text{from} = \{\{S,U\};\{S,V\}\}
+$$
+$$
+\text{to} = \{\{E,U\};\{E,V\}\}
+$$
+$$
+I = \{\{I,U\};\{I,V\}\}
+$$
+and the set of all state variable indices
+$$
+\Omega = \{\{S,U\};\{S,V\};\{E,U\};\{E,V\};\{I,U\};\{I,V\};\{R,U\};\{R,V\}\}
+$$
+
+There is only one parameter from the base SEIR sub-model associated with the force of infection, and that is $\beta$. There are a few options for structuring $\beta$ and these depend on what the modeller believes about how the transmission rate varies and how it influences transmission. Here we list four options for mathematical completeness, but understand that some of these options are biologically unrealistic.
+
+\begin{enumerate}
+    \item $\beta$ is a scalar
+    \begin{itemize}
+        \item this scalar is used in both forces of infection
+        \item the product $\beta I$ is then also a scalar given by $\beta (x_{I,U} + x_{I,V})$
+    \end{itemize}
+    \item $\beta = \beta_\text{from}$ is a vector
+    \begin{itemize}
+        \item this vector is over the $\text{from}$ index set (or equivalently over $\text{to}$)
+        \item the product $\beta I$ is then a vector $\beta_{from} (x_{I,U} + x_{I,V})$
+    \end{itemize}
+    \item $\beta = \beta_I$ is a vector
+    \begin{itemize}
+        \item this vector is over the $I$ index set
+        \item this is the unrealistic case because vaccination typically modifies succeptibility and not infectivity
+        \item the product $\beta I$ is a scalar given by the inner product $<\beta_I, x_I>$
+        \item importantly it is not a vector given by the linear combination $\beta_{I,U} x_{I,U} + \beta_{I,V} x_{I,V}$, because this linear combination is over the index set of the indirect effect and not the forces of infection themselves (we will generalize this idea of separating index sets that vary along the from/to states from those that vary along one of the index sets describing indirect effects)
+    \end{itemize}
+    \item $\beta = \beta_{\text{from},I}$ is a matrix
+    \begin{itemize}
+        \item this matrix has rows that vary over $\text{from}$ and columns that vary over $I$
+        \item the product $\beta I$ is a matrix times a vector $\beta_{\text{from}, I} x_I$
+    \end{itemize}
+\end{enumerate}
+
+
+Now we deal with the denominator, which is a sum of the state variables. This can be handled in a similar manner to the product $\beta I$, but without all of the cases. There is only a single case because there are not any parameters associated with this component of the rate equation, and it is the possible structures associated with the parameter $\beta$ that generated the four different cases. In particular the denominator is the sum of all the elements of the state vector, $x_{S,U} + x_{S,V} + x_{E,U} + x_{E,V} + x_{I,U} + x_{I,V} + x_{R,U} + x_{R,V}$.
+
+\subsection{Generalizations}
+
+We have discussed one mechanism in detail -- the force of infection in an SEIRxVAX model. In general, we define a mechanism as a related set of flows between boxes. For each mechanism we have a vector-valued flow rate, $y$. In cases where the flow rate is constant for all flows in the mechanism, we will sometimes treat $y$ as a scalar where convenient. For each mechanism we also have a set of indices of $\text{from}$ compartment and another set of the same length of the $\text{to}$ compartments. Both of these sets can have parameter vectors over them. For each mechanism we can also define any number of index sets, $\text{indirect\_i}$, over the compartments for representing indirect effects of any other compartment on the flow rates. We can associate parameter vectors over any of these indirect effect index sets. We can also associate matrices of parameters or state variables with rows over either the $\text{from}$ or $\text{to}$ index sets and columns over an indirect effect index set. Finally we can also define tensors of parameters or state variables over any number of these index sets, but these tensors must be flattened into a matrix by associating the index sets associated with indirect effects into a https://www.overleaf.com/project/62c47733b38f39223ce3d7ecsingle set for defining the columns of the matrix.
+
+The purpose of the index sets is so the user can line up related state variables and parameters in their formulas for the flow rates.
+
+\section{Bookkeeping}
+
+A model contains a table describing the state variables and one (zero?) or more tables describing sets of parameters. Each set of parameters is described by the same index set.
+
+\section{Interface}
+
+What kind of interface do we need for defining these index sets?
+
+\section{Common Bad Practice}
+
+Here we describe several bad practices in model definition that we have encountered. These bad practices can make it more difficult for modellers to see how their model can be viewed as a structured model composed of sub-models.
+
+\subsection{Mixing Dimensioned and Undimensioned Objects}
+
+
+
+\end{document}

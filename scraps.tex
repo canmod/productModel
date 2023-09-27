@@ -1,0 +1,60 @@
+Our language can be used as a basis for developing model product toolkits.
+
+We argue that the design of such a toolkit is more challenging than it first appears. We addressed this challenge by developing a mathematical language that can unambiguously communicate the many nuances of this subject. We have restated in this language the primary findings of a seminal paper on the topic and proposed a generalization of those results inspired by the needs of practicing modelers. Furthermore, we have discussed several particularly challenging examples which introduce complexities the previously discussed operations are unable to easily reproduce. We hope to have convinced the reader of the importance and potential of this approach to constructing models while at the same time alerting them to the many subtle ways unintended artifacts can be introduced to models when this approach is employed incautiously. 
+
+However, the complexity involved in generalizing flow functions from factor models to product models and the numerous asymmetries that can be introduced by the need to represent real world behaviour, produce a great variety complications that can frustrate attempts at systematization.
+
+\steve{
+Contributions:
+\begin{itemize}
+    \item Rigorous definition of three product types -- There are several products with subtly different mathematical structure yet with very different biological implications, and so introducing mathematical rigor is helpful for clearly distinguishing between them and determining which is most appropriate and as a basis for developing software ...
+    \item Clarify cases where these specific product definitions will be helpful and cases where they will not
+\end{itemize}
+}
+\steve{
+Next steps:
+\begin{itemize}
+    \item Proposing different products in this framework (e.g. linear combinations of flow functions; alternative methods for setting default parameter variation among strata; contact amongst strata for defining transmission in product models )
+    \item Proposing different non-multiplicative operations
+    \item Software development and interface design
+    \item Clarifying the relationship between graph theory and category theory approaches
+    \item 
+\end{itemize}
+}
+
+
+The ability to construct complex compartmental models by combining simpler models using binary operations is of great practical value to modelers. It allows them to quickly add or remove features from a model in response to rapidly evolving real world conditions. That said there is considerable variety in what operations are possible and no single operation is suitable for use in all cases. Due to the subtle, and sometimes counter intuitive, differences between products modelers should take great care when choosing how to construct their models. We have identified two key difficulties that can arise when employing model products. The occurs when the vertices and edges of the flow diagram cannot be expressed as a Cartesian product of the factor model diagrams. In these cases, three things can be done: 
+\begin{enumerate}
+    \item Do not use model products and instead manually construct the desired model as single, unfactorable, entity.
+    \item Simplify the factor models and take the product of the simplified versions and then manually add the parts that where removed from the factor models to the simplified product model.
+    \item take the product naively and then manually remove the extraneous parts to achive the desired result
+\end{enumerate}
+In the experience of the authors, when the Cartesian product of the factor graphs does not match the desired result, the first option is usually the most expedient. The second difficulty arises in deciding how and/or whether 
+ different strata in the product model interact with each other with respect to transmission (or other mathematically equivalent processes). Again there are three options, but in this case they can all be solved by strict product models as we have formally defined here: 
+\begin{enumerate}
+    \item Disallow interaction between different strata in the product model (i.e. naive product). 
+    \item Allow interaction between any two given strata in the product model (i.e. modified product)
+    \item Allow the user to specify, for every stratum in the product model, which strata the original is able to interact with (i.e. generalized product).
+\end{enumerate}
+It is worth noting that an alternate way to deal with these differences between models would be to always allow interaction between any to given stratum in a model, but to introduce contact rates between strata that take the value of zero where specific interactions should be disallowed.
+Several attempts have been made to systematize model operations with the Category Theory approach representing the most comprehensive mathematical formulation currently available. In this formulation model composition is performed using so-called “pullbacks" and “pushouts". “Pullbacks" in particular are analogous to the model products defined in this paper. It could be an interesting project to find so-called “type graphs" that make the category-theoretic operations match our graph-theoretic operations. The language of Graph Theory offers a more approachable alternative for those without the mathematical background currently needed to make use of Category Theory. While there is not yet an exhaustive list of operations needed to construct any possible compartmental model the ones discussed here cover the most common scenarios and serve to illustrate both the great potential and the potential pitfalls of binary operations on model space.
+
+
+We do this because there are many different ways that parameters in the product model could relate to parameters in the factor models and there is no clear way to deduce from the factor models alone which is most appropriate.
+
+ 
+
+Any time a new dimension of stratification is introduced where interaction between strata is possible the issue of mixing rates arises. For example, people in one age group may be more likely to interact with other people of the same age than with people who are much older or younger. This suggests the need to introduce contact matrices in such examples to account for the different mixing rates between separate stratum.
+
+Since we are unable, with just the information present in the factor models, to determine how the factor model parameters should be translated to the product model, we instead repeat every factor model parameter at every stratum of the product model and treat them all as independent.
+
+While not ideal, this arrangement means that the basic structure of the product model can be generated without concern for the relationship between various parameters. Once the structure of the product model exists a modeler will be able to assign values to its parameters using whichever method they find most expedient.
+
+Consider a simple SIR model that has been stratified to include age groups, it may be desirable to account for the relative likelihood of different age groups coming in contact with each other. After all young children will presumably interact with other young children far more than they do with teenagers for example. This can be done by introducing a "contact matrix" which details the contact patterns between different age groups. So for example in a model stratified by $k$ age groups, for any given group $i$ there will be a vector $\vec{c_i}\in \R^k$ detailing how likely contact is between a susceptible person in age group $i$ and an infected person in each of the age groups.  
+
+
+Compartmental models closely resemble directed graphs, which are graphs where the connections between nodes have a specific direction \citep{roberts2009applied}; in this analogy the directional connections correspond to flows between compartments. The relationship between directed graphs and compartmental models has been studied before, for example by \cite{walter1999compartmental} --- however, such investigations have been largely limited to the case where the magnitudes of flows between compartments are governed by linear equations. While certainly an important special case, this framework is insufficient for a disease-transmission model. In fact, a central point we hope to communicate in this paper is that, while constructing the nodes and edges of compartmental models is straightforward, making choices about how to calculate flows between compartments is a challenge with considerable nuance.
+
+We consider a compartmental model with $n$ compartments. Flows can go from one compartment to another, from outside the system into a compartment (e.g., births), or from a compartment to the outside (e.g., deaths). There are thus up to $n(n+1)$ possible flows, although most of these will be missing in any particular model. Each flow that is present will be described by a function that may depend on the state of any of the $n$ compartments and on any of $m$ (possibly time-varying) parameters. Flows out of a compartment can be either \define{per capita} flows, in which case their value is multiplied by the current state value of that compartment, or they may be \define{absolute} flows where no further computation is required.
+
+Historically much of the work done investigating compartmental models through a mathematical lens has been focused on the case where flow rates between compartments are restricted to linear equations (i.e., flows strictly proportional to the current state of the originating compartment).

@@ -1,0 +1,101 @@
+*** tmp0.tex	2023-07-16 15:10:20.197225689 -0400
+--- tmp.tex	2023-07-16 15:10:18.869211831 -0400
+***************
+*** 1,10 ****
+! %Based on Version 1.2 of SN LaTeX, November 2022
+  
+- %%\documentclass[referee,sn-basic]{sn-jnl}% referee option is meant for double line spacing
+- 
+- %%\documentclass[lineno,sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
+- 
+- \documentclass[pdflatex,sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
+  
+  %%%% Standard Packages
+  %%<additional latex packages if required can be included here>
+--- 1,9 ----
+! \documentclass{article}
+! \usepackage{arxiv}
+! \usepackage[authoryear]{natbib}
+! \usepackage{url}
+! \usepackage{hyperref}
+  
+  
+  %%%% Standard Packages
+  %%<additional latex packages if required can be included here>
+***************
+*** 78,108 ****
+  
+  \begin{document}
+  
+! \title[Constructing compartmental models]{Toward a comprehensive system for constructing compartmental epidemic models}
+  
+! \author*[1]{\fnm{Darren} \sur{Flynn-Primrose}}\email{flynnprd@mcmaster.ca}
+! \author[1]{\fnm{Steve} \sur{Walker}}\email{swalk@mcmaster.ca}
+! \author[1,2]{\fnm{Michael} \sur{Li}}
+! \author[1,3] {\fnm{Benjamin M.} \sur{Bolker}}\email{bolker@mcmaster.ca}
+! \author[1] {\fnm{David J.\,D.} \sur{Earn}}\email{earn@math.mcmaster.ca}
+! \author[3] {\fnm{Jonathan} \sur{Dushoff}}\email{dushoff@mcmaster.ca}
+! 
+! \affil*[1]{\orgdiv{Department of Mathematics \& Statistics}, \orgname{McMaster University}, \orgaddress{\street{1280 Main Street West}, \city{Hamilton}, \state{Ontario}, \postcode{L8S 4K1}, \country{Canada}}}
+! \affil[2]{\orgdiv{Public Health Risk Science Division, National Microbiology Laboratory}, \orgname{Public Health Agency of Canada}, \orgaddress{\street{370 Speedvale Avenue West}, \city{Guelph}, \state{Ontario}, \postcode{N1H 7M7}, \country{Canada}}}
+! \affil[3]{\orgdiv{Department of Biology}, \orgname{McMaster University}, \orgaddress{\street{1280 Main Street West}, \city{Hamilton}, \state{Ontario}, \postcode{L8S 4L8}, \country{Canada}}}
+  
+! \abstract{Compartmental models are valuable tools for investigating infectious diseases. Researchers building such models typically begin with a simple structure where compartments correspond to individuals with different epidemiological statuses, e.g., the classic SIR model which splits the population into susceptible, infected, and recovered compartments. However,
+    as more information about a specific pathogen is discovered, or as a means to
+!   investigate the effects of heterogeneities, it becomes useful to stratify models further --- for example by age, geographic location, or pathogen strain. The operation of constructing stratified compartmental models from a pair of simpler models resembles the Cartesian product used in graph theory, but several key differences complicate matters. In this article we give explicit mathematical definitions for several so-called ``model products'' and provide examples where each is suitable. We also provide examples of model stratification where no existing model product will generate the desired result. }
+  
+  \keywords{epidemiology, transmission dynamics, compartmental model, graph theory, Cartesian product}
+  
+- %%\pacs[JEL Classification]{D8, H51}
+- 
+- \pacs[MSC Classification]{92D30, 92-10, 05C76}
+- 
+- \maketitle
+- 
+  \section{Introduction}\label{intro}
+  The COVID-19 pandemic has reemphasized the importance of compartmental models \citep{abou2020compartmental, massonis2021structural, adam2020special, currie2020simulation, lofgren2014mathematical, mcbryde2020role, enserink2020covid} and has resulted in a flood of new compartmental models (e.g., \cite{friston2020dynamic, fields2021age, chang2022stochastic, lavielle2020extension, balabdaoui2020age, leontitsis2021seahir}). 
+  This abundance of new model variants is to be expected given the number of public health modelers seeking to integrate the current scientific understanding of emerging infectious diseases in a way that will have policy impact. Modelers must be able to build models rapidly to explore scenarios and generate high quality forecasts; public health recommendations have the biggest impact if they can be acted on promptly. However, the speed at which modelers can develop new models typically trades off with model quality. It is therefore useful to develop tools that make it easier for modelers to build high-quality models more quickly.
+--- 77,109 ----
+  
+  \begin{document}
+  
+! \title{Toward a comprehensive system for constructing compartmental epidemic models}
+  
+! \author{Darren Flynn-Primrose \\
+!   Department of Mathematics \& Statistics, McMaster University \\
+!   \texttt{flynnprd@mcmaster.ca} \\
+!   \And Steve Walker \\
+!   Department of Mathematics \& Statistics, McMaster University \\
+!   \And Michael Li \\
+!   Public Health Risk Science Division, National Microbiology Laboratory, Public Health Agency of Canada \\
+!   \And Benjamin M. Bolker \\
+!   Departments of Biology and Mathematics \& Statistics, McMaster University \\
+!   \And David J.\,D. Earn \\
+!   Department of Mathematics \& Statistics, McMaster University \\
+!   \And Jonathan Dushoff \\
+!   Department of Biology, McMaster University
+! }
+  
+! \maketitle
+!     
+! \begin{abstract}
+!   Compartmental models are valuable tools for investigating infectious diseases. Researchers building such models typically begin with a simple structure where compartments correspond to individuals with different epidemiological statuses, e.g., the classic SIR model which splits the population into susceptible, infected, and recovered compartments. However,
+    as more information about a specific pathogen is discovered, or as a means to
+!   investigate the effects of heterogeneities, it becomes useful to stratify models further --- for example by age, geographic location, or pathogen strain. The operation of constructing stratified compartmental models from a pair of simpler models resembles the Cartesian product used in graph theory, but several key differences complicate matters. In this article we give explicit mathematical definitions for several so-called ``model products'' and provide examples where each is suitable. We also provide examples of model stratification where no existing model product will generate the desired result. 
+! \end{abstract}
+  
+  \keywords{epidemiology, transmission dynamics, compartmental model, graph theory, Cartesian product}
+  
+  \section{Introduction}\label{intro}
+  The COVID-19 pandemic has reemphasized the importance of compartmental models \citep{abou2020compartmental, massonis2021structural, adam2020special, currie2020simulation, lofgren2014mathematical, mcbryde2020role, enserink2020covid} and has resulted in a flood of new compartmental models (e.g., \cite{friston2020dynamic, fields2021age, chang2022stochastic, lavielle2020extension, balabdaoui2020age, leontitsis2021seahir}). 
+  This abundance of new model variants is to be expected given the number of public health modelers seeking to integrate the current scientific understanding of emerging infectious diseases in a way that will have policy impact. Modelers must be able to build models rapidly to explore scenarios and generate high quality forecasts; public health recommendations have the biggest impact if they can be acted on promptly. However, the speed at which modelers can develop new models typically trades off with model quality. It is therefore useful to develop tools that make it easier for modelers to build high-quality models more quickly.
+***************
+*** 541,546 ****
+--- 542,548 ----
+  
+  The authors declare that they have no competing interests.
+  
++ \bibliographystyle{plainnat}
+  \bibliography{biblio_redux}
+  
+  
