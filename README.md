@@ -1,4 +1,6 @@
-The recommended way to work on this project without interacting with overleaf is to clone the _overleaf_ (not github) git repo: https://git.overleaf.com/62c47733b38f39223ce3d7ec 
+The recommended way to work on this project without interacting with overleaf is to clone the _overleaf_ (not github) git repo: https://git.overleaf.com/64f0d175326cfbdad8ace76c
+
+**NOTE NEW git repo hash**: now pointing to new/non-archived version
 
 ## JD 2023 Jun 09 (Fri)
 
