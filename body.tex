@@ -58,7 +58,7 @@ The flow from ``infected" to ``recovered" in the Epi model is also a constant \e
 
 In the SIR model the infectious compartment is the ``to" compartment of the infection flow; however, this relationship does not hold in all models \ben{I've decided to call these ``infection'' rather than ``infectious'' flows. (Is there a connection to the categorization of compartments and flows for the $F$ and $V$ components of the Jacobian in next-generation-matrix computations?)}.  In the SEIR model, for example, the infection flow goes to the ``exposed" compartment, people who have been infected but cannot yet infect others. Models may also have multiple infection flows and infectious compartments --- for example separating the infected population on the basis of symptom severity (mild vs. severe), in which case there would be an infection flow to every infected compartment. (Figure \ref{fig:simple_sir_age} does not include dashed arrows connecting infection flows with infectious compartments; these relationships will be discussed in Section \ref{worden}.)
 
-\paragraph{Sources and sinks}
+\paragraph{One-sided flows (sources and sinks)}
 
 Consider the long-term outcome of the ``Age'' model in Figure \ref{fig:sir_age_strat}. Since the population is closed and people only flow from younger compartments to older ones, the entire population will eventually accumulate in the ``old" compartment. If we want to simulate the system over time scales comparable to the host lifespan, we need to find a way to add and remove people from the model (``vital dynamics''). This can be done with one-sided flows, ``sources" (flows with no ``from'' compartment'') and ``sinks" (flows with no ``to" compartment). We could add a source flow into the ``young" compartment and a sink flow out of the ``old" compartment, representing the effects of birth and death. A slightly more realistic model would add a sink for every age compartment,  with a very low death rate for the youngest compartment and gradually increasing death rates with age.
 
@@ -68,17 +68,22 @@ When models with sources or sinks are used as a factor model, there is some ambi
 
 \paragraph{Absolute and \emph{per capita} flows}
 
-The final complexity we wish to mention before we move on is the difference between absolute flows and \emph{per capita} flows. In the discussion above we have largely been concerned with \emph{per capita} flows, that is to say flows where the total number of people moving between compartments is given by some flow rate multiplied by the population in the ``from" compartment. This is even the case for ``infectious" flows, it just so happens in those cases that the flow rate is state dependent. The alternative to \emph{per capita} flows is absolute flows which specify the total number of people moving between compartments directly (i.e. without being multiplied by the ``from" compartment population). There are several instances where absolute flows may be used instead of \emph{per capita} flows, for example if the birth rate and population size in an age model are relatively constant it may be expedient to specify the total number of newborns directly rather than recalculating the same number every time step based on a \emph{per capita} birth rate. Alternatively, in a model that includes stratification by location, migration patterns between different locations may be best described by absolute flow rates rather than \emph{per capita} ones.
+One final important distinction is the difference between absolute and \emph{per capita} flows. Most of the flows discussed above are \emph{per capita} flows, \ie where the total flow between compartments is given by a \emph{per capita} rate multiplied by the population in the ``from" compartment
+(in the case of infection flows, these \emph{per capita} rates are dependent on the states of other compartments).
+In contrast, \emph{absolute flows} are specified only in terms of the total flow. For example, births are often implemented as an absolute flow \citep{Earn2008}; if population-level vaccination rates are recorded in public health data, it may be simplest to implement these as absolute flows (although specifying an absolute flow from a non-source population may sometimes lead to a mathematically ill-posed model \citep{gharouni2022testing}.
 
-In the abstract mathematical sense it is possible to define a compartmental model as a collection of three sets, one specifying the compartments, one specifying the connections between compartments, and one specifying functions to compute the magnitude of flows across said connections. At a computational level however things are more complicated, in addition to the compartments and the flows between them there is also a considerable amount of metadata that is needed in order to correctly simulate a model. Perhaps the most important pieces of metadata are the ordering of the state and flow vectors. For example one modeler could choose to represent the various states in our age stratified SIR model as a vector with the order 
-\[
-    \xvec = (SY, SM, SO, IY, IM, IO, RY, RM, RO)
-\]
-Another modeler may choose the ordering
-\[
-    \xvec = (SY, IY, RY, SM, IM, RM, SO, IO, RO)
-\]
-Both of these are reasonable choices and both will produce viable models provided they are used consistently. If someone where to change between the two orderings in a single model or if two modelers using different orderings attempted to share their results without converting then confusion would be sure to follow. For that reason when constructing and combining models it is highly beneficial to start by specifying the order of the state and flow vectors.
+
+\ben{I commented out a paragraph about state ordering here; I don't understand why it's useful}
+
+%% In the abstract mathematical sense it is possible to define a compartmental model as a collection of three sets, one specifying the compartments, one specifying the connections between compartments, and one specifying functions to compute the magnitude of flows across said connections. At a computational level however things are more complicated, in addition to the compartments and the flows between them there is also a considerable amount of metadata that is needed in order to correctly simulate a model. Perhaps the most important pieces of metadata are the ordering of the state and flow vectors. For example one modeler could choose to represent the various states in our age stratified SIR model as a vector with the order 
+%% \[
+%%     \xvec = (SY, SM, SO, IY, IM, IO, RY, RM, RO)
+%% \]
+%% Another modeler may choose the ordering
+%% \[
+%%     \xvec = (SY, IY, RY, SM, IM, RM, SO, IO, RO)
+%% \]
+%% Both of these are reasonable choices and both will produce viable models provided they are used consistently. If someone where to change between the two orderings in a single model or if two modelers using different orderings attempted to share their results without converting then confusion would be sure to follow. For that reason when constructing and combining models it is highly beneficial to start by specifying the order of the state and flow vectors.
 
 Another key piece of metadata is the the ``from" and ``to" compartments of all flows (of course sources and sinks will only have one of those). It is particularly important to be able to retrieve the ``from" compartment for any \emph{per capita} flows as we need to know the population of those compartments in order to calculate the actual flow. \df{In macpan2 this is taken care of by vectors automatically created when ``Compartmental" is called. These vectors hold the index for the relevant compartments in the state vector. So for example ``per\_capita\_from" is a vector with indices locating the  ``from" compartment of all \emph{per capita} flows in the state vector. There is also a vector called ``per\_capita\_flows" which locates all \emph{per capita} flows in the flow vector. So to compute the magnitude of the \emph{per capita} flows we can write "$state[per\_capita\_flows\_from] * flow[per\_capita\_flows]$. Note first that the multiplication above is element wise not a dot product and second that in macpan2 \emph{per capita} flows that are sources or sinks are treated separately so the above only calculates the flow for \emph{per capita} flows that are NOT sources or sinks.}
 
