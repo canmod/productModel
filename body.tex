@@ -175,7 +175,7 @@ Different strata of a product model may interact.
 A standard formulation for the force of infection of a pathogen (i.e., the per-susceptible rate of infection) is
 $\Lambda = \frac{\beta I}{N}$. Suppose we now stratify this model to represent a scenario where each person lives in one of three different locations but may come in contact with anyone in any  location. Our model would then have three infected compartments ($\vec{I} = (I_1, I_2, I_3)$) and three susceptible compartments ($\vec{S} = (S_1, S_2, S_3)$; the force of infection is also a vector of location-specific values ($\vec{\Lambda} = (\lambda_1, \lambda_2, \lambda_3)$). 
 In the most general case, where the force of infection does not take the standard form given above, each $\lambda_i$ would be expressed as some function of the infected populations as well as a vector of parameters $\vec{\beta_i}$ which gives some information about how people at different locations interact with each other. Thus, we would be left with $\vec{\Lambda} = (f(\vec{\beta_1}, \vec{I}), f(\vec{\beta_2}, \vec{I}), f(\vec{\beta_3}, \vec{I}))$. 
-When the force of infection is a linear equation with respect to the population of infected compartments as in eq.~\ref{infectionequation, we can be more specific: the factor model parameter $\beta$ generalizes to a $3 \times 3$ matrix of transmission parameters $B = \left(\beta_{ij}\right)$
+When the force of infection is a linear equation with respect to the population of infected compartments as in eq.~\ref{infectionequation}, we can be more specific: the factor model parameter $\beta$ generalizes to a $3 \times 3$ matrix of transmission parameters $B = \left(\beta_{ij}\right)$
 so that we can write
 \[
     \vec{\Lambda} = \frac{1}{N} B \vec{I}
