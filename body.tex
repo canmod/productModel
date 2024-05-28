@@ -12,7 +12,7 @@ Proceeding in this way eventually results in complex and fragile models, much of
 
 A promising recent project to formalize the construction of compartmental models employs the language of category theory \citep{fong2018seven, Libkind2022an, libkind2021operadic, baez2023categorical, baez2017compositional}. This powerful approach addresses many of the concepts we discuss here; however, at its current stage of development it requires considerable knowledge of advanced mathematics to use effectively.  An ongoing project to implement the category theoretic approach in the Julia language can be found at \url{https://github.com/AlgebraicJulia/AlgebraicPetri.jl} \citep{algebraicjulia}. 
 
-\cite{worden2017products} use the relatively simple language of graph theory to describe common methods of combining a set of compartmental models (\emph{factor models}) into a new \emph{product model} that incorporates the structure of all of its factors. The current paper is a result of the our efforts to implement the products described by Worden and Porco in software. We view model ``multiplication'' as a three-step procedure:
+\cite{worden2017products} use the relatively simple language of graph theory to describe common methods of combining a set of compartmental models (\term{factor models}) into a new \term{product model} that incorporates the structure of all of its factors. The current paper is a result of the our efforts to implement the products described by Worden and Porco in software. We view model ``multiplication'' as a three-step procedure:
 
 \paragraph{Procedure for Model Multiplication}\label{genproc}
 
@@ -75,7 +75,7 @@ Combining factor models with sources and sinks into product models may require e
 \ben{There is an ambiguity here. Is a \pc flow always defined relative to a ``from'' compartment? If so, then we should mention that sources must always be p.c. flows. The discussion below hints that if we defined birth as $\mu N = \mu (S+I+R)$, rather than a constant $b$, we might consider it a p.c. flow, but this seems wrong because (1) people aren't actually moving from (say) $I$ to $S$ when they produce offspring, (2) the rate of flow isn't dependent on the concentration of a ``from'' compartment. I'm not sure this matters in practice, but does birth proportional to $N$ count as a p.c. or an absolute flow?}
 Most of the flows discussed above are \pc flows, \ie where the total flow between compartments is given by a \pc rate multiplied by the population in the ``from" compartment
 (for infection flows, the \pc rates themselves depend on the states of infectious compartments).
-In contrast, \emph{absolute flows} are specified only in terms of the total flow. Births are often implemented as absolute flows \citep{Earn2008}. if population-level vaccination rates are recorded in public health data, it may be simplest to implement these as absolute flows (although specifying an absolute flow from a non-source population may sometimes lead to a mathematically ill-posed model \citep{gharouni2022testing}.
+In contrast, \term{absolute flows} are specified only in terms of the total flow. Births are often implemented as absolute flows \citep{Earn2008}. if population-level vaccination rates are recorded in public health data, it may be simplest to implement these as absolute flows (although specifying an absolute flow from a non-source population may sometimes lead to a mathematically ill-posed model \citep{gharouni2022testing}.
 
 \ben{I commented out a paragraph about state ordering here; I don't understand why it's useful}
 
@@ -98,7 +98,7 @@ In contrast, \emph{absolute flows} are specified only in terms of the total flow
 \df{In macpan2 this is taken care of by vectors automatically created when ``Compartmental" is called. These vectors hold the index for the relevant compartments in the state vector. So for example ``per\_capita\_from" is a vector with indices locating the  ``from" compartment of all \pc flows in the state vector. There is also a vector called ``per\_capita\_flows" which locates all \pc flows in the flow vector. So to compute the magnitude of the \pc flows we can write "$state[per\_capita\_flows\_from] * flow[per\_capita\_flows]$. Note first that the multiplication above is element wise not a dot product and second that in macpan2 \pc flows that are sources or sinks are treated separately so the above only calculates the flow for \pc flows that are NOT sources or sinks.}
 
 \ben{make sure we are treating vocabulary around nodes/compartments/states consistently}
-In the underlying data structure for a compartmental model, we keep track of compartments (nodes) and flows (edges) separately. Table~\ref{tab:projections} lists the information we need to track for edges and flows, including (1) which compartments are origins (``from'') and destinations (``to'') for particular flows; (2) whether a given flow is \pc or absolute; (3) whether flows have inflows and/or outflows (i.e., whether they are sources, sinks, or two-sided flows). In addition, we record which states and flows are infectious/infective. Finally, in particular models we may additionally track specific \emph{labels} that correspond to useful distinctions for a particular modeling task: young vs. old, hospitalized vs. non-hospitalized, etc.. (While labeling compartments as ``infectious'' and ``non-infectious'' is the most important distinction for maintaining model structure, we may also want to consider ``infected'' vs. ``non-infected'' compartments; a person in a latent, or exposed, class would be infected but non-infectious.).
+In the underlying data structure for a compartmental model, we keep track of compartments (nodes) and flows (edges) separately. Table~\ref{tab:projections} lists the information we need to track for edges and flows, including (1) which compartments are origins (``from'') and destinations (``to'') for particular flows; (2) whether a given flow is \pc or absolute; (3) whether flows have inflows and/or outflows (i.e., whether they are sources, sinks, or two-sided flows). In addition, we record which states and flows are infectious/infective. Finally, in particular models we may additionally track specific \term{labels} that correspond to useful distinctions for a particular modeling task: young vs. old, hospitalized vs. non-hospitalized, etc.. (While labeling compartments as ``infectious'' and ``non-infectious'' is the most important distinction for maintaining model structure, we may also want to consider ``infected'' vs. ``non-infected'' compartments; a person in a latent, or exposed, class would be infected but non-infectious.).
 The metadata vectors represent ordered subsets of the full sets of states or flows in the model; the ordering (which is kept consistent between sets of \pc rates and flows) allows us to do addition and elementwise multiplication of vectors.
 \ben{I'm still not sure how we handle multiple outflows from a single compartment (say, flows from $I$ to acute care and ICU); are there repeated elements in these vectors?}
 
@@ -180,33 +180,31 @@ so that we can write
 \[
     \vec{\Lambda} = \frac{1}{N} B \vec{I}
 \]
-While it preserves generality, this approach makes the number of required parameters increase quadratically with the number of locations (strata). Epidemiological modelers have devised many ways to add structure the $B$ parameter, sometimes called the ``who acquires infection from whom'' (WAIFW) matrix \ben{CITE Anderson and May, age-structured matrix papers, etc. ...} In practice the likelihood of a person residing in one location coming into contact with a person in a different location is not arbitrary but can reasonably be expected to vary according to the distance between the two locations. So if $D$ is a three-by-three matrix where the $d_{i,j}$ entry denotes the distance between location $i$ and location $j$ then it is possible to construct a contact matrix $C$ that assigns numerical values to the likelihood of contact between people at two locations based on the known distance between them. One way to do this would be to let every entry $c_{i,j}$ in $C$ be given by
-\[
-    c_{i,j} = e^{-\nu d_{i,j}}
-\]
-where $\nu$ is some fixed parameter. In this way we can write
+While it preserves generality, this approach makes the number of required parameters increase quadratically with the number of locations (strata). Epidemiological modelers have devised many ways to add structure to the $B$ parameter, sometimes in terms of a ``who acquires infection from whom'' (WAIFW) matrix \cite{andemay85, andemaybook, grenande85}. In practice the likelihood of a person residing in one location coming into contact with a person somewhere else varies according to the distance between the two locations. We can construct a contact matrix $C$ that makes the rate of contact between people at two locations a (typically monotonically decreasing) function of distance, e.g. $c_{i,j} = e^{-\nu d_{i,j}}$ (or $c_{i,j} = 1/d_{i,j}^2$, in the case of a \term{gravity model} \citep{xiaMeasles2004}).
+In this way we can write
 \[
     \vec{\Lambda} = \frac{\beta}{N} C \vec{I}
 \]
-which preserves the original meaning of the parameter $\beta$ and only introduces one new parameter ($\nu$) instead of nine. Notice that it is possible to translate between the two approaches using the map
-\[
-    B = \beta C = \beta \begin{pmatrix} 
-                        e^{-\nu d_{1,1}} & e^{-\nu d_{1,2}} & e^{-\nu d_{1,3}} \\
-                        e^{-\nu d_{2,1}} & e^{-\nu d_{2,2}} & e^{-\nu d_{2,3}} \\
-                        e^{-\nu d_{3,1}} & e^{-\nu d_{3,2}} & e^{-\nu d_{3,3}} \\
-                        \end{pmatrix}
-\]
+which preserves the original meaning of the parameter $\beta$ and only introduces one new parameter ($\nu$) instead of nine.
 
-There are, of course, other ways to handle this kind of parameter simplification (e.g., \cite{andemay85, andemaybook, grenande85}). Most situations will allow for a parameter space mapping of this kind that relates the default parameter space generated by model products to a smaller parameter space dictated by the specific data available to the modeler. However, as we have tried to make clear in this subsection, the sheer variety of parameter space mappings that could be useful in some situation is so great that for now we will maintain generality by treating all parameters in the product model as independent.
+%% BMB: this feels redundant/not worth the space to me ...
+%% Notice that it is possible to translate between the two approaches using the map
+%% \[
+%%     B = \beta C = \beta \begin{pmatrix} 
+%%                         e^{-\nu d_{1,1}} & e^{-\nu d_{1,2}} & e^{-\nu d_{1,3}} \\
+%%                         e^{-\nu d_{2,1}} & e^{-\nu d_{2,2}} & e^{-\nu d_{2,3}} \\
+%%                         e^{-\nu d_{3,1}} & e^{-\nu d_{3,2}} & e^{-\nu d_{3,3}} \\
+%%                         \end{pmatrix}
+%% \]
 
-In our general parameterization, the $l_i$ parameters in the product model that come from the $i^{\textrm th}$ factor model (of two) can be organized in a $l_i \times k_{2-i} \times k_{2-i}$ order-three tensor, $B^{(i)}$. The modeler will have some set of parameters known to them which we call $\vec{\theta}$ and will be able to compose, from a library of standard relations, a mapping $g$ so that
-$$
-B_{hij}^{(i)} = g_{hij}^{(i)}(\vec{\theta}) \,.
-$$
+
+There are, of course, other ways to handle this kind of parameter simplification. Most situations will allow for a parameter space mapping of this kind that relates the default parameter space generated by model products to a smaller parameter space dictated by the specific data available to the modeler. However, as we have tried to make clear in this subsection, there are so many potentially useful mappings that for now we will maintain generality by treating all parameters in the product model as independent.
+
+In our general parameterization, the $l_i$ parameters in the product model that come from the $i^{\textrm th}$ factor model (of two) can be organized in a $l_i \times k_{2-i} \times k_{2-i}$ order-three tensor, $B^{(i)}$. The modeler will have some set of parameters known to them which we call $\vec{\theta}$ and will be able to compose, from a library of standard relations, a mapping $g$ so that $B_{hij}^{(i)} = g_{hij}^{(i)}(\vec{\theta})$.
 
 \section{Cartesian Model Products}\label{worden}
 
-Returning to Figure \ref{fig:sir_age_strat}, recall that the dashed arrow in the SIR model indicates that the flow from $S$ to $I$ is an infected flow and that its magnitude is partly determined by the number of infected people. When we combined the SIR and age models in Figure \ref{fig:simple_sir_age} we omitted any dashed arrows on the grounds that they could drawn in several different ways. \cite{worden2017products} describe two separate products, each with the dashed lines drawn differently. In their ``naive" product, each susceptible age group can only be infected by infectious people in the same age group (see Figure \ref{fig:naive_product}). In their ``modified" product, each susceptible age group can be infected by infectious people in any age group (see Figure \ref{fig:modified_product}). The underlying graphs of these product models are identical; both are the Cartesian product of the factor model graphs. The only difference between them is the functional form of the infection flows in the product model (with respect to the \hyperref[genproc]{procedure for model}) \ben{what???}. The graph underlying a product model is not always the Cartesian product of factor model graphs: for example, Worden and Porco's ``strong product" adds additional edges to the Cartesian product. Looking at Figure \ref{fig:simple_sir_age} it is clear that it is not possible to move directly from the young susceptible compartment to the middle infected one, to make that transition one must either first become infected and then age or age and then become infected, in both cases it takes a minimum of two time steps to complete the transition. In the strong product the (young, susceptible) compartment would have an edge leading directly to the (infected,  middle) compartment so the transition could be done in a single time step. This makes more intuitive sense when considering a model with multiple infectious pathogens; in that scenario we might choose to use the strong product so people can be infected with both pathogens in a single time step. However, this is really only an issue when using relatively long time steps; when using shorter time steps the number of people being infected by two pathogens at the same time would be negligible and so the strong product would increase the complexity of the model while having minimal effect on its output. Alternatively, as we shall see in Section \ref{wp}, there are some cases where the digraph underlying the product model is a proper subset of the Cartesian product of the factor models. This is particularly the case when combining models with different pathogen strains while disallowing the possibility of being infected by multiple strains simultaneously. For now we will focus on products where the graph of the product model is the Cartesian product of the factor model graphs.
+Returning to Figure \ref{fig:sir_age_strat}, recall that the dashed arrow in the SIR model indicates that the flow from $S$ to $I$ is an infected flow and that its magnitude is partly determined by the number of infected people. When we combined the SIR and age models in Figure \ref{fig:simple_sir_age} we omitted any dashed arrows on the grounds that they could drawn in several different ways. \cite{worden2017products} describe two separate products, each with the dashed lines drawn differently. In their \term{naive product}, each susceptible age group can only be infected by infectious people in the same age group (Figure \ref{fig:naive_product}). In their \term{modified  product}, each susceptible age group can be infected by infectious people in any age group (see Figure \ref{fig:modified_product}). The underlying graphs of these product models are identical; both are the Cartesian product of the factor model graphs. The only difference between them is the functional form of the infection flows in the product model (with respect to the \hyperref[genproc]{procedure for model multiplication}) \ben{what???}. The graph underlying a product model is not always the Cartesian product of factor model graphs: for example, Worden and Porco's \term{strong product} adds additional edges to the Cartesian product. In the model illustrated in Figure \ref{fig:simple_sir_age}, individuals cannot move directly from the young susceptible compartment to the middle infected one; to make that transition they must either become infected and then age or age and then become infected. In both cases it takes a minimum of two time steps to complete the transition. In the strong product the (young, susceptible) compartment would have an edge leading directly to the (infected,  middle) compartment so the transition could be done in a single time step. In a scenario where strata were determined by infection with multiple infectious pathogens, we might choose to use the strong product so people can be infected with both pathogens in a single time step. In a model implemented in continuous time, or with short discrete time steps, the chances of being infected by two pathogens simultaneously would be negligible and so the strong product would increase the complexity of the model while having minimal effect on the results. Alternatively there are some cases (Section \ref{wp}) where the digraph underlying the product model is a proper subset of the Cartesian product of the factor models, for example in models with multiple pathogen strains that disallow the possibility of co-infection. For now, however, we will focus on products where the graph of the product model is the Cartesian product of the factor model graphs.
 
 \begin{figure}
     \centering
@@ -224,92 +222,97 @@ Returning to Figure \ref{fig:sir_age_strat}, recall that the dashed arrow in the
 
 \FloatBarrier
 
+To illustrate the difference between naive and modified products consider an SIR model where the infection flow is given by $\fvec^\text{inf} = \frac{\beta I}{N}$ where $N$, the total population of the model, is constant. In this case the transmission matrix $T$ from Equation \ref{infectionequation} would be the one-by-one matrix $\left[ \beta/N \right]$.
+When moving to the product model, we could either let $T$ be given by the diagonal matrix $\textrm{Diag}(\beta_i/N)$
+%% \[
+%%     T = \begin{bmatrix}
+%%         \frac{\beta_1}{N} & 0 & 0 \\
+%%         0 & \frac{\beta_2}{N} & 0\\
+%%         0 & 0 & \frac{\beta_3}{N}
+%%     \end{bmatrix}
+%% \]
+which would yield the naive product, or we could let $T$ be given most generally by $\left[ \beta_{ij}/N \right]$
+%% \[
+%%     T = \begin{bmatrix}
+%%         \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & \frac{\beta_{13}}{N} \\
+%%         \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N}\\
+%%         \frac{\beta_{31}}{N} & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}
+%%     \end{bmatrix}
+%% \
+(with all $\beta_{ij}>0$), yielding the modified product.
 
-To illustrate the difference between naive and modified products consider an SIR model where in infection flow is given by $\fvec^\text{inf} = \frac{\beta I}{N}$ where $N$, the total population of the model, is constant. In this case the transmission matrix $T$ from Equation \ref{infectionequation} would be the one-by-one matrix 
-\[
-    T = \begin{bmatrix} \frac{\beta}{N} \end{bmatrix}
-\]
-When moving to the product model, we could either let $T$ be given by
-\[
-    T = \begin{bmatrix}
-        \frac{\beta_1}{N} & 0 & 0 \\
-        0 & \frac{\beta_2}{N} & 0\\
-        0 & 0 & \frac{\beta_3}{N}
-    \end{bmatrix}
-\]
-which would yield the naive product, or we could let $T$ be given by
-\[
-    T = \begin{bmatrix}
-        \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & \frac{\beta_{13}}{N} \\
-        \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N}\\
-        \frac{\beta_{31}}{N} & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}
-    \end{bmatrix}
-\]
-yielding the modified product.
+In the age-stratified example the modified product is likely to be preferred because people of all ages commonly interact with each other. In the case of spatial stratification, one might want to use the naive or the modified product, or another alternative, depending on the specifics of the epidemiological system. At first glance the naive product seems appropriate because it encodes the assumption that people in different locations cannot infect one other because they cannot physically interact. This approach works well in product models that do simulate movement explicitly \cite[e.g.][]{mohammadi2023importation}, where the flows between different locations are included in the original factor model describing spatial structure. Spatial models that model movement implicitly \citep{dietz1995structured} compute the rates of contact between pairs of people who live in different locations during times when one or both are away from. In this case the modified product would seem the most appropriate.
 
-The term ``naive product" is not pejorative; in this specific example the modified product is likely to be preferred because people of all ages commonly interact with each other. In some scenarios, however, the naive product would be preferred. In the case of spatial stratification, for example, one might want to use the naive, the modified, or another alternative depending on the specifics of the epidemiological system. At first glance the naive product seems promising because it incorporates the idea that people at different physical locations cannot interact and so do not infect one another. This, however, assumes that the model in question simulates movement explicitly which is not always the case. In product models that do simulate movement explicitly \cite[e.g.][]{mohammadi2023importation}, the flows between different locations are included in the original factor model describing spatial structure. Other models, such as \cite{dietz1995structured}, model movement implicitly. In this sort of model a person's location stratum might determine where they live but the possibility of their movement to another location is represented as a contact rate between people in their home stratum and the stratum they might visit. In this case the modified product would seem the most appropriate. However, the situation can be even more complex; for example, depending on the scales involved, it may be beneficial to allow contact between people who are either in the same location \emph{or} in neighbouring locations, for some appropriate definition of a neighbourhood. In this case we want to go beyond the naive or modified products to some kind of \define{generalized product}.
+%% BMB: not sure this complexity is worth bringing up?
+%% However, the situation can be even more complex; for example, depending on the scales involved, it may be beneficial to allow contact between people who are either in the same location \emph{or} in neighbouring locations, for some appropriate definition of a neighbourhood. In this case we want to go beyond the naive or modified products to some kind of \define{generalized product}.
 
+The naive product restricts interaction to people in the same stratum; the modified product allows people in any strata to interact. We propose a new, generalized product that allows for people in each stratum to interact with people in an arbitrary subset of the other strata, allowing the creation of models where people at a given location can interact at the same location or neighboring locations, but not globally.
 
-The naive product restricts people in each stratum to interacting only with other people in the same stratum; the modified product allows people in any strata to interact. We propose a new product that allows for people in each stratum to interact with people in an arbitrary subset of the other strata. This allows the creation of a model where people at a given location can interact at the same location or neighboring locations. 
+\ben{A lot of the following section seems to be re-inventing network models.  How specific is this to understanding product models? How much detail should we retain?}
 
-Below we show three different ways an SI model could be stratified with location. Figures \ref{fig:spat_n} and \ref{fig:spat_m} show the naive and modified products respectively. Figure \ref{fig:spat_g} shows one example of a generalized product where interactions can only occur within a single geographic region or between neighboring regions. So for example an infected person in the Toronto region could infect a susceptible person in Toronto or Ottawa but not one in Montreal. However, an infected person in Ottawa could infect a susceptible person anywhere. 
+Below we show three different ways an SI model could be stratified with location. Figures \ref{fig:spat_n} and \ref{fig:spat_m} show the naive and modified products respectively. Figure \ref{fig:spat_g} shows a generalized product where interactions can only occur within a single geographic region or between neighboring regions. For example, an infected person in the Toronto region could infect a susceptible person in Toronto or Ottawa but not one in Montreal, while the neighbourhood of an infected person in Ottawa includes all three regions.
 
 \FloatBarrier
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth]{images_redux/Spatial_stratified_SI_Naive.svg}
-    \caption{The naive product of an SI model with location model including Toronto, Ottawa, and Montreal. Notice the force of infection at any given location is influenced is determined by the size of the infectious population at the same location. This approach is useful when movement between locations is being modeled explicitly}
+    \caption{The naive product of an SI model with location model including Toronto, Ottawa, and Montreal. The force of infection at any given location depends only on the infectious population at that location.}
     \label{fig:spat_n}
 \end{figure}
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth]{images_redux/Spatial_stratified_SI_Modified.svg}
-    \caption{The modified product of an SI model with location model including Toronto, Ottawa, and Montreal. Notice that the size of the infectious population at each location influences the force of infection at every location. This approach is useful when movement between location is modeled implicitly, for example through non-zero contact rates between populations at different locations}
+    \caption{The modified product of an SI model with location model including Toronto, Ottawa, and Montreal; the forces of infection depend on infectious populations in all three regions.}
     \label{fig:spat_m}
 \end{figure}
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth]{images_redux/Spatial_stratified_SI_General.svg}
-    \caption{A generalized product of an SI model with location model including Toronto, Ottawa, and Montreal. Notice that the force of infection at a given location depends on the size of the infectious population at the same location \textit{and} at neighboring locations. This approach has a wide variety of applications, for example when there is significant variance in the distance between different locations}
+    \caption{A generalized product of an SI model with location model including Toronto, Ottawa, and Montreal. The forces of infection depend on the infectious population at the same location and in neighboring locations.}
     \label{fig:spat_g}
 \end{figure}
 
 \FloatBarrier
 
-In this spatially stratified example, if we let the total population of the model be $N$, the transmission matrix for the naive product would be
-\[
-    T = \begin{bmatrix}
-        \frac{\beta_1}{N} & 0 & 0 \\
-        0 & \frac{\beta_2}{N} & 0 \\
-        0 & 0 & \frac{\beta_3}{N}
-    \end{bmatrix}
-\]
-While the modified product transmission matrix is given by
-\[
-    T = \begin{bmatrix}
-        \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & \frac{\beta_{13}}{N} \\
-        \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N} \\
-        \frac{\beta_{31}}{N} & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}
-    \end{bmatrix}
-\]
-And to produce the generalized product we would use 
-\[
-    T = \begin{bmatrix}
-        \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & 0 \\
-        \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N} \\
-        0 & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}  
-    \end{bmatrix}
-\]
-Ultimately we could treat all Cartesian products as though they where modified products by setting the value of $\beta$ to zero in places where we don't want seperate strata to interact but in many cases this would result in doing a large amount of unnecessary computational work (e.g. multiplying things by zero) which can significantly increase to time required to simulate a model. For the sake of efficiency it is desirable to think of these products as distinct operations and always use the one that creates the least amount of unnecessary computational baggage. 
+%In this spatially stratified example, if we let the total population of the model be $N$, the transmission matrix for the naive product would be $\textrm{Diag}(\beta_i/N)$
+%% \[
+%%     T = \begin{bmatrix}
+%%         \frac{\beta_1}{N} & 0 & 0 \\
+%%         0 & \frac{\beta_2}{N} & 0 \\
+%%         0 & 0 & \frac{\beta_3}{N}
+%%     \end{bmatrix}
+%% \]
+%While the modified product transmission matrix is given by
+%% \[
+%%     T = \begin{bmatrix}
+%%         \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & \frac{\beta_{13}}{N} \\
+%%         \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N} \\
+%%         \frac{\beta_{31}}{N} & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}
+%%     \end{bmatrix}
+%% \]
+
+The only change from the contact matrices defined above for the naive and modified products is that in the case of the generalized product we would set $\beta_{31} = \beta_{13} = 0$ to reflect the impossibility of transmission between Montreal and Toronto.
+%% \[
+%%     T = \begin{bmatrix}
+%%         \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & 0 \\
+%%         \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N} \\
+%%         0 & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}  
+%%     \end{bmatrix}
+%% \]
+\ben{I don't really get this. I agree that leaving out a computational term rather than retaining it as a division by zero is slightly better, but this seems fairly trivial/unimportant? Are we losing anything if we delete the following para?}
+
+Ultimately we could treat all such special cases by setting the value of $\beta$ to zero in places where we don't want different strata to interact but in many cases this would result in doing a large amount of unnecessary computational work (e.g. multiplying things by zero) which can significantly increase to time required to simulate a model. For the sake of efficiency it is desirable to think of these products as distinct operations and always use the one that creates the least amount of unnecessary computational baggage. 
 
 \section{Challenging Examples}\label{unco}
-While the operations defined above allow us to construct a wide range of compartmental models by taking products of simpler factor models, they cannot account for every possible model. In this section we discuss a number of examples where products alone, as they appear in this article, are insufficient.
+While the operations defined above allow us to construct a wide range of compartmental models by taking products of simpler factor models, they cannot account for every possible combination of models. In this section we discuss a number of examples where the model products we have defined so far are insufficient.
 
 \subsection{Models with alternate functional forms}\label{aff}
-Until this point in the article we have been assuming that we can calculate the total number of infected newly infected people in a given stratum by summing the number of people infected by each strata in the model separately. For example suppose we start with a factor model where the \pc rate of infection is given by some function $f(\betavec, \xvec)$ where $\betavec$ is a parameter vector and $\xvec$ is the state vector. Than suppose we stratified this factor model by age so the state vector of the product model is $\xvec = (\xvec_1, \ldots, \xvec_n)$ where the subscripts denote components that belong to separate age strata. Then the \pc rate rate of infection for age stratum $i$ in the product model will be $f(\betavec_{i1}, \xvec_1) + \ldots + f(\betavec_{in}, \xvec_n)$. An alternate approach would be to instead take a weighted average of the compartment populations in each stratum and use this new average as the input to the flow rate function. Using this idea the \pc rate of new infections for age strata $i$ would be $f(\betavec, w_{i1}\xvec_1 + \ldots + w_{in}\xvec_n)$ where the $w$'s are weights. This approach is particularly useful when incorporating inhibitory influences in a model. For example, during an epidemic, individuals will be more careful if they know hospitals are at capacity than they would be when there are ample medical resources available. 
+
+\ben{I think this section can be simplified/clarified/better motivated, but not sure how yet (start with examples? STD models with varying mixing rates? Frequency-dependent infection? Are we really thinking about incidence here, or could we equivalently talk about forces of infection?)}
+Up till now we have been assuming that we can calculate the incidence in a given stratum by summing the number of people infected by each stratum in the model separately. For example suppose we start with a factor model where the \pc rate of infection is given by some function $f(\betavec, \xvec)$ where $\betavec$ is a parameter vector and $\xvec$ is the state vector. Than suppose we stratified this factor model by age so the state vector of the product model is $\xvec = (\xvec_1, \ldots, \xvec_n)$ where the subscripts denote components that belong to separate age strata. Then the \pc rate rate of infection for age stratum $i$ in the product model will be $f(\betavec_{i1}, \xvec_1) + \ldots + f(\betavec_{in}, \xvec_n)$. An alternate approach would be to instead take a weighted average of the compartment populations in each stratum and use this new average as the input to the flow rate function. Using this idea the \pc rate of new infections for age strata $i$ would be $f(\betavec, w_{i1}\xvec_1 + \ldots + w_{in}\xvec_n)$ where the $w$'s are weights. This approach is particularly useful when incorporating inhibitory influences in a model. For example, during an epidemic, individuals will be more careful if they know hospitals are at capacity than they would be when there are ample medical resources available. 
 
 The weighted states approach is equivalent to the summation method provided $f$ is a linear function. One important instance where this will not be the case is if $f$ involves normalizing by the total population of the model and that population is not constant. To see this let $N(\xvec)$ be a function that sums every component in a vector and let $f(\betavec, \xvec) = \frac{\betavec \cdot \xvec}{N(\xvec)}$. In this example the summation method would produce 
 \begin{equation}\label{summationequation}
@@ -328,7 +331,7 @@ Of course the two approaches are not mutually exclusive, we could find each stra
 
 \subsection{Models with Testing}\label{testing}
 
-One such example (where model products alone cannot produce the desired result) involves modeling the effects of testing for infection, inspired by the dynamics of testing during the COVID-19 pandemic. One example of a model that includes the effects of testing can be found in \cite{gharouni2022testing}. Consider the epidemiological model in Figure \ref{fig:testify_epi} and the testing process depicted in Figure \ref{fig:testify_states}. The modified product of these two models includes a compartment for untested individuals at the hospital. However, this product is not what we want (Figure \ref{fig:testify_desired}). 
+One such example (where model products alone cannot produce the desired result) involves modeling the effects of testing for infection, inspired by the dynamics of testing during the COVID-19 pandemic \citep{gharouni2022testing}. Consider the epidemiological model in Figure \ref{fig:testify_epi} and the testing process depicted in Figure \ref{fig:testify_states}. The modified product of these two models includes a compartment for untested individuals at the hospital. However, this product is not what we want (Figure \ref{fig:testify_desired}). 
 The key difference is that untested individuals entering the hospital are typically tested (i.e., moved from ``untested'' to ``awaiting results''); our model world assumes that they always are.
 Therefore, the ``untested hospitalized" compartment in product model is empty  and should be eliminated; the flow that goes to that compartment should instead be directed to the ``hospitalized/awaiting test result" compartment. Constructing the desired model would thus require an extra step to remove the superfluous compartment.
 
@@ -357,9 +360,9 @@ Therefore, the ``untested hospitalized" compartment in product model is empty  a
 
 
 \subsection{Multistrain Models and a Weak Product}\label{wp}
-Many epidemics involve multiple co-circulating strains of the same pathogen \citep{gog2002dynamics, williams2021localization}. In the case of COVID-19 such variants have significant implications for the efficacy of vaccines \citep{abu2021effectiveness, koyama2020emergence} and diagnostic tests \citep{vasireddy2021review}. In more complex models, including multiple strains rapidly inflates the size of both the state space and the parameter space \citep{kryazhimskiy2007state}. One way to limit the size of these unwieldy models while continuing to include the effects of multiple strains in our model is to disallow the possibility of \emph{superinfection} (i.e., an individual being infected with multiple strains at the same time). It would therefore be useful to define a \emph{weak product} similar to the operations proposed by \cite{worden2017products} but which excludes all states corresponding to a superinfected status. One way to do this is to use the standard Cartesian product but include only flows that emanate from compartments with no inflow or no outflow. For convenience we denote this operation by $\boxplus$ and call it the weak product, we also refer to compartments with no inflow as ``source compartments" and ones with no outflow as ``sink compartments". \df{I don't think ``source" and ``sink" are the correct terms here but I'm at a loss as to what to replace it with.}
+Many epidemics involve multiple co-circulating strains of the same pathogen \citep{gog2002dynamics, williams2021localization}. In the case of COVID-19 such variants have significant implications for the efficacy of vaccines \citep{abu2021effectiveness, koyama2020emergence} and diagnostic tests \citep{vasireddy2021review}. In more complex models, including multiple strains rapidly inflates the size of both the state space and the parameter space \citep{kryazhimskiy2007state}. One way to limit the size of these unwieldy models while continuing to include the effects of multiple strains in our model is to disallow the possibility of superinfection (i.e., an individual being infected with multiple strains at the same time). \ben{should we worry about distinguishing superinfection (infection A then B) vs coinfection (simultaneous inf with A and B)?} It would therefore be useful to define a weak product similar to the operations proposed by \cite{worden2017products} but which excludes all states corresponding to a superinfected status. One way to do this is to use the standard Cartesian product but include only flows that emanate from compartments with no inflow (\term{sources}) or no outflow (\term{sinks}). For convenience we denote this operation by $\boxplus$ and call it the \term{weak product}. \ben{not sure how a flow can ``emanate from'' a sink? Should this be ``involve'' rather than ``emanate from''?}
 
-Figure~\ref{fig:ms_ns_2d} depicts a two-strain SIR model without super-infection; this corresponds to the weak product of two SIR models. Figures \ref{fig:wp_act} and \ref{fig:wp_nonasoc} depict two different results for the weak product of three SIR models; note that the difference between them results from changing the order in which products are done. If, for example, we denote the models of the red, yellow, and purple strains by $A$, $B$, and $C$ respectively then Figure \ref{fig:wp_act} depicts $(A\boxplus B)\boxplus C$ and Figure \ref{fig:wp_nonasoc} depicts $A\boxplus (B\boxplus C)$. Figure \ref{fig:ms_ns_3d} depicts the desired result for a three-strain SIR model with no super-infection. It is possible to create a version of the weak product defined above that will produce the model shown in Figure \ref{fig:ms_ns_3d}; however it requires us to distinguish between compartments that are global sources or sinks and compartments that are sources or sinks with respect to one of the three strains specifically. That is to say, while a global sink must have no outflows, a weaker condition says that a compartment is a sink with respect to a specific pathogen if every compartment that can be reached via the outflow has the same infection status with respect to that pathogen as the original compartment. Programmatically we achieve this by introducing a concept of `labeled partitions' which separates the vertices of the model into disjoint sets corresponding to the vertices' status with respect to a specific pathogen. Each dimension of stratification in the model corresponds to a different labeled partition with each stratum corresponding to a different disjoint set. In this way we can define sources and sinks with respect to a specific set of labels rather than globally. For example, we can say a compartment $A$ is a sink with respect to a specific labeled partition if every compartment that can be reached after being in $A$ is in the same set as $A$. Figure \ref{fig:msms} outlines a compartmental model with one source compartment but two sink compartments and Figure \ref{fig:msms2} shows the weak product of two such models.
+Figure~\ref{fig:ms_ns_2d} depicts a two-strain SIR model without superinfection, corresponding to the weak product of two SIR models. Figures \ref{fig:wp_act} and \ref{fig:wp_nonasoc} depict two different results for the weak product of three SIR models; the difference between them results from changing the order in which products are done. If, for example, we denote the models of the red, yellow, and purple strains by $A$, $B$, and $C$ respectively \ben{?? was there a previous version with these colours?} then Figure \ref{fig:wp_act} depicts $(A\boxplus B)\boxplus C$ and Figure \ref{fig:wp_nonasoc} depicts $A\boxplus (B\boxplus C)$. Figure \ref{fig:ms_ns_3d} depicts the desired result for a three-strain SIR model with no super-infection. It is possible to create a version of the weak product defined above that will produce the model shown in Figure \ref{fig:ms_ns_3d}; however it requires us to distinguish between compartments that are global sources or sinks and compartments that are sources or sinks with respect to one of the three strains specifically. That is to say, while a global sink must have no outflows, a weaker condition says that a compartment is a sink with respect to a specific pathogen if every compartment that can be reached via the outflow has the same infection status with respect to that pathogen as the original compartment. Programmatically we achieve this by introducing a concept of `labeled partitions' which separates the vertices of the model into disjoint sets corresponding to the vertices' status with respect to a specific pathogen. Each dimension of stratification in the model corresponds to a different labeled partition with each stratum corresponding to a different disjoint set. In this way we can define sources and sinks with respect to a specific set of labels rather than globally. For example, we can say a compartment $A$ is a sink with respect to a specific labeled partition if every compartment that can be reached after being in $A$ is in the same set as $A$. Figure \ref{fig:msms} outlines a compartmental model with one source compartment but two sink compartments and Figure \ref{fig:msms2} shows the weak product of two such models.
 An unfortunate aspect of this product model is that several of the compartments can only be reached by individuals after they are already dead (!).
 If there are relatively few such compartments a modeler may choose simply to leave them in the model and treat them all as a single compartment. But if there are many such ``zombie compartments", or if computational efficiency is a pressing concern, they could be removed  from the model.
 
@@ -411,7 +414,6 @@ If there are relatively few such compartments a modeler may choose simply to lea
 \section{Conclusion}\label{conc}
 
 Adding new strata to simple epidemiological models is closely related to taking the Cartesian product of digraphs. Modellers who want to combine sets of simple models into a single large stratified model would benefit from a toolkit based on well-defined mathematical operations. This toolkit must contain a variety of operations representing a useful subset of the numerous ways that separate strata in a model can interact. We have developed a mathematical formalism for defining such operations and used it to restate two previously proposed model operations, the naive and modified products, which represent extremes of a spectrum of interactions between strata. The naive product corresponds to the case where different strata never interact, while the modified product corresponds to scenarios where any stratum can interact with any other stratum. We generalize these previously proposed operations to a third operation that allows any level of interaction between model strata, for example to construct geographically stratified models where interactions can occur within a single location and its neighbours but not more distantly.
-
 
 Ultimately, all we have really done here is discuss ways to reduce the size and complexity of compartmental model products by eliminating unnecessary flows and compartments. If time and resources were unlimited we could treat every compartmental model as though it was a complete graph with every compartment connected to every other compartment. Doing this would certainly simplify the process of finding the product of two models, but simulating the result would involve spending a lot of time computing things like the probability of someone spontaneously ageing thirty years and developing immunity to a pathogen they never actually encountered. Our goal however is not only to produce mathematically accurate models, but also to use those models to provide policy makers with useful and timely advice. This means that finding ways to reduce the time needed create relevant models and generate their output is a highly beneficial exercise.
 
