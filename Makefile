@@ -16,6 +16,7 @@ ms_submit.pdf: ms_submit.tex.pdf
 
 ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
 	$(latexnonly)
+	$(CP) ms_submit.tex.aux ms_submit.aux
 
 Ignore += svg-inkscape
 
