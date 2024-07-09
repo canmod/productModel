@@ -35,6 +35,8 @@ makestuff/%.stamp:
 -include makestuff/os.mk
 
 ## -include makestuff/pipeR.mk
+
+latex = pdflatex --shell-escape
 -include makestuff/texi.mk
 
 -include makestuff/git.mk
