@@ -12,6 +12,7 @@ Sources += README.md
 Sources += $(wildcard *.tex *.sh)
 
 ## ms_submit.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
+ms_submit.pdf: ms_submit.tex.pdf
 
 Ignore += svg-inkscape
 
