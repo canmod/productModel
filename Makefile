@@ -36,6 +36,7 @@ makestuff/%.stamp:
 
 ## -include makestuff/pipeR.mk
 
+bibtex = bibtex $*
 latex = pdflatex --shell-escape
 -include makestuff/texi.mk
 
