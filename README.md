@@ -1,5 +1,10 @@
 The recommended way to work on this project without interacting with overleaf is to clone the _overleaf_ (not github) git repo: https://git.overleaf.com/64f0d175326cfbdad8ace76c
 
+As a reminder, from [here](https://www.overleaf.com/learn/how-to/Git_integration_authentication_tokens):
+
+> You can create and delete authentication tokens in your Overleaf Account Settings ...
+> If prompted for a username, enter the username “git”. When prompted for a password, enter your authentication token
+
 ## BMB 2024 Apr 14 (Sun)
 
 * **NOTE NEW git repo hash**: now pointing to new/non-archived version
