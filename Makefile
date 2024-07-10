@@ -11,7 +11,7 @@ vim_session:
 Sources += README.md
 Sources += $(wildcard *.tex *.sh)
 
-## ms_submit.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
+## ms_submit.pdf: ms_submit.tex abstract.tex Appendices.tex body.tex
 ms_submit.pdf: ms_submit.tex.pdf
 
 ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
