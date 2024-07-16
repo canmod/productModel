@@ -1,3 +1,8 @@
+## This is the productModel canmod github project
+## https://github.com/canmod/productModel.git
+
+######################################################################
+
 current: target
 -include target.mk
 

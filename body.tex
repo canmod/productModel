@@ -73,39 +73,20 @@ Source flows, which have no from compartment, can only be implemented as absolut
 
 \paragraph{Implementation}
 
-To define a compartmental model, we must specify compartments (nodes) and flows (edges). To specify a flow, we record: a from and a to compartment (one will be empty, for a source or sink flow); a rate type (\pc or total) and a rate function that describes how the rate depends on parameters, time and other flows. 
+To define a compartmental model, we:
 
-When we compute overall rates of change $\vec r(\vec x, \vec f)$, elements of $\fvec$ that correspond to \pc flows will be multiplied by the population of their ``from'' compartment before they are added to $\rvec$; absolute flows are added directly to $\rvec$. Elements in $\fvec$ that correspond to two-sided flows contribute twice to $\rvec$, as a decrease in the population of the ``from'' compartment and an increase in the ``to'' compartment; flows from sources or to sinks contribute only once.
-\jd{I'm not on board with contributing twice: that messes up the ability to Markov. I'm stopping here to send email.}
+\begin{enumerate}
+\item specify compartments (nodes) and flows (edges). A flow is specified by defining: from/to compartments (one of which will be empty for a source or sink flow); a rate type (\pc or total); and a rate function that describes how the rate depends on parameters, time and other flows. 
 
-%We need the metadata described in Table \ref{tab:projections} in order to make the appropriate calculations to determine their ultimate effect on the model.
-%We will make this more explicit with an example below. During the course of these calculations we may need each piece of metadata to be represented in any one of three way. In particular we will sometimes want our vectors to have the same length as the state vector with non-zero entries aligned with their respective ``from'' compartments (e.g. when calculating the total flow out of a compartment), other times we will need the non-zero entries to be aligned with their respective ``to'' compartment (e.g. when calculating the total flow out of a compartment), finally we will sometimes want our vectors to contain only non-zero entries regardless of length (e.g. when doing matrix multiplication). We trust that the reader will be able to deduce the intended meaning from context. \df{In hindsight this this sort of problem is why I got lost in the weeds with the whole projections thing. Trying to be explicit about how non-zero entries should be aligned or when and how to pad a vector with zeroes so it has the same length as the state vector is deceptively difficult. I'm still not really happy with how I've explained things, for example when I say ``non-zero elements'' what I really mean are the elements that are not zero at EVERY time step. After all any one of the flows could be zero at a specific time step just by coincidence. In the standard SEIR model if the initial population vector is $(99,1,0,0)$ and exposed individuals are not infectious than on the very first time step the flow from S to E will be zero but it would count as a non-zero element for the purposes of the explanation above.}
-The rate (or gradient) vector $\rvec$ is state and flow dependent, so must be recalculated at every time step in a dynamical model.
+\item compute the rate vector \ratevector, based on parameters, time and the state vector \statevector. The length of the rate vector is the number of flows in the model.
 
-In a simple epidemic model the only state-dependent flows (i.e., flows that depend on  compartments other than their ``from'' compartments) are the infection flows. We will typically assume that infection flows are additive; thus we can write
-    
-\begin{equation}\label{infectionequation}
-\fvec^\text{inf} = T\xvec^\text{inf}
-\end{equation}
-where $T$ is a transmission matrix with columns corresponding to infectious states and rows corresponding to infection flows.
-%\df{In macpan2 $\fvec$ and $\fvec^{inf}$ are stored as separate vectors so there is a step here where we assign the values in $\fvec^{inf}$ back into the correct locations in $\fvec$. I'm not sure if that needs to be explained here or if it is implicit.}
-%Infection flows are typically expressed as two-sided flows with \pc rates and are associated with both an inflow and an outflow. In principle there is nothing stopping an infection flow from being expressed in absolute terms or being a source flow but neither of those possibilities are common.
-After finding the infected flows we separately calculate the total inflow and the total outflow of each compartment.
-% internally, we need to keep careful track of the ordering and alignment of flow vectors with their corresponding ``from'' and ``to'' states vectors.
-The total inflow is
-\[
-    \rvec^\text{total inflow} = \xvec^\text{pc, from} * \fvec^\text{pc, in} + \fvec^\text{abs, in}
-\]
-and the total outflow is
-\[
-    \rvec^\text{total outflow} = \xvec^\text{pc, from} * \fvec^\text{pc, out} + \fvec^\text{abs, out}
-\]
-where $*$ denotes elementwise multiplication. 
-\ben{is there a standard term for a dynamical system expressed in terms of total changes in compartments rather than in changes due to particular processes?}
-Finally, the total rate of change for every compartment (which we need in an ODE-like system) is
-\[
-\rvec = \rvec^\text{total inflow} - \rvec^\text{total outflow} .
-\]     
+\item compute the flow vector \flowvector\ by multiplying each element of the rate vector by a value from the state vector (for \pc rates) or by 1.
+
+\end{enumerate}
+
+It will sometimes be convenient to have different elements of the flow vector have the same to and from compartments; for example if individuals in one compartment may be subject to infection by individuals in several different compartments. Such flows will typically be added together downstream.
+
+\jd{Above are the changes that I already wanted to make... I need to try now to read the rest before changing anything. I switched the definitions of \flowvector\ and \ratevector\ above only, so watch out for that below.}
 
 \subsection{Parameterizing product models}
 
@@ -331,7 +312,7 @@ Unfortunately, the weak product is not associative!
 Figures \ref{fig:wp_act} and \ref{fig:wp_nonasoc} depict two different results for the weak product of three SIR models with different grouping. If the factor models for the three strains are $M_1$, $M_2$, $M_3$ then Figure \ref{fig:wp_act} depicts $(M_1\boxplus M_2)\boxplus M_3$ and Figure \ref{fig:wp_nonasoc} depicts $M_1 \boxplus (M_2 \boxplus M_3)$. Figure \ref{fig:ms_ns_3d} depicts the desired result for a three-strain SIR model with no super-infection.
 
 \ben{I got a little bit confused by the flow here. The three-strain model, and why the weak product doesn't work in this case, is presented (are there other applications of the weak product other than multi-strain models? Seems a little limited if the \emph{only} thing it is good for is two-strain models without superinfection). Then we say ``but we can't do that with these products''. Then we talk about labeled partitions. Then we present a \emph{different} two-strain model, which I guess represents another problematic case for the weak product (but which can also be solved with labeled partitions)? The only thing we say about this model (in the last few lines of the body of the paper) is that it's problematic [and could be solved by labeled partitions?]}
-  
+
 It is possible to create a version of the weak product defined above that will produce the model shown in Figure \ref{fig:ms_ns_3d}. However, it requires us to distinguish between compartments that are \emph{global} sources or sinks and compartments that are sources or sinks with respect to one of the three strains specifically. That is to say, while a global sink must have no outflows, a weaker condition says that a compartment is a sink with respect to a specific pathogen if every compartment that can be reached via the outflow has the same infection status with respect to that pathogen as the original compartment. Programmatically we achieve this by introducing a concept of `labeled partitions' which separates the vertices of the model into disjoint sets corresponding to the vertices' status with respect to a specific pathogen. Each dimension of stratification in the model corresponds to a different labeled partition with each stratum corresponding to a different disjoint set. In this way we can define sources and sinks with respect to a specific set of labels rather than globally. For example, we can say a compartment $A$ is a sink with respect to a specific labeled partition if every compartment that can be reached after being in $A$ is in the same set as $A$. Figure \ref{fig:msms} outlines a compartmental model with one source compartment but two sink compartments and Figure \ref{fig:msms2} shows the weak product of two such models.
 An unfortunate aspect of this construction is that several of the compartments can only be reached by individuals after they are already dead (!).
 If there are relatively few such compartments a modeler may choose simply to leave them in the model and treat them all as a single compartment. But if there are many such ``zombie compartments", or if computational efficiency is a pressing concern, they could be removed  from the model.
