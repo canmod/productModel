@@ -71,32 +71,7 @@ Most of the flows discussed above are \pc flows, where the total flow between co
 In contrast, \term{absolute flows} are specified in terms of the total flow. 
 Source flows, which have no from compartment, can only be implemented as absolute flows (this is how births are typically implemented \citep{Earn2008}). If population-level vaccination rates are recorded in public health data, it may be simplest to implement these as absolute flows (although specifying an absolute flow from a non-source population may sometimes lead to a mathematically ill-posed model \citep{gharouni2022testing}).
 
-\paragraph{Metadata}
-  
-In the underlying data structure for a compartmental model, we keep track of compartments (nodes) and flows (edges) separately. Table~\ref{tab:projections} lists the information we need to track for edges and flows, including (1) which compartments are origins (``from'') and destinations (``to'') for particular flows; (2) whether a given flow is \pc or absolute; (3) whether flows have inflows and/or outflows (i.e., whether they are sources, sinks, or two-sided flows). In addition, we record which states and flows are infectious/infective. Finally, in particular models we may additionally track specific \term{labels} that correspond to useful distinctions for a particular modeling task: young vs. old, hospitalized vs. non-hospitalized, etc.. (While labeling compartments as ``infectious'' and ``non-infectious'' is the most important distinction for maintaining model structure, we may also want to consider ``infected'' vs. ``non-infected'' compartments; a person in a latent, or exposed, class would be infected but non-infectious.).
-The metadata vectors represent ordered subsets of the full sets of states or flows in the model; the ordering (which is kept consistent between sets of \pc rates and flows) allows us to do addition and elementwise multiplication of vectors.
-\ben{I'm still not sure how we handle multiple outflows from a single compartment (say, flows from $I$ to acute care and ICU); are there repeated elements in these vectors?}
-\jd{Yes, there are repeated elements... but I'm thinking all of this, including the table, is complexification -- for every flow we need to know the from/to information, and how the flow is calculated, right? What else is any of this saying except that macpan likes to keep track of stuff in a particular way.}
-
-% annoying to include \hline after every row but solutions are complex:
-% https://tex.stackexchange.com/questions/111668/tabular-with-automatic-hline
-\begin{table}
-\centering
-    \begin{tabular}{|m{1.5cm}|m{1.5cm}|m{30em}|}
-        \hline
-        Name & Notation & Description \\\hline
-        from & $\xvec^\text{from}$ & All elements of the state vector that are the ``from" compartment for a flow. Note that this may be larger than $\xvec$ itself as some compartments may have more than one flow exiting from them. \\\hline
-        to & $\xvec^\text{to}$ & All elements of the state vector that are the ``to" compartment for a flow. Note that this may be larger than $\xvec$ itself as some compartments may have more than one flow entering them. \\\hline
-        inflow & $\fvec^\text{in}$ & All flows in the flow vector that have an associated inflow (i.e. no sink flows) \\\hline
-        outflow & $\fvec^\text{out}$ & All flows in the flow vector that have an associated outflow (i.e. no source flows) \\\hline
-        \pc & $\fvec^\text{pc}$ & All \pc flows in the flow vector \\\hline
-        absolute & $\fvec^\text{abs}$ & All absolute flows in the flow vector \\\hline
-        infectious & $\xvec^{\text{inf}}$, $\fvec^{\text{inf}}$ & All elements of the given vector that are infectious \\\hline
-        \emph{label} & $\xvec^{\mbox{\em \tiny label}}$, $\fvec^{\mbox{\em \tiny label}}$ & All elements of the given vector that share the specified \emph{label} (e.g. ``old'', ``Toronto'', ``vaccinated'') \\\hline
-    \end{tabular}
-    \caption{Names, notation, and descriptions of metadata associated with a compartmental model. Note that $\xvec^\text{from}$ and $\xvec^\text{to}$ will typically be invoked with respect to a specific type of flow. $\xvec^\text{pc, from}$ in particular denotes the ``from'' compartments of all \pc flows.}
-    \label{tab:projections}
-\end{table}
+To define a compartmental model, we must specify compartments (nodes) and flows (edges). To specify a flow, we record: a from and a to compartment (one will be empty, for a source or sink flow); a rate type (\pc or total) and a rate function that describes how the rate depends on parameters, time and other flows. 
 
 The dynamics of compartmental models are typically implemented using ordinary differential equations (ODES), although modelers also use other approaches such as discrete-time models or continuous-time Markov processes. No matter what dynamical framework is used, we need to compute the combined rates of flow among compartments. Depending on the framework, these may be combined into a total rate of change of a compartment (as in ODEs) or remain as rates of different processes (as in continuous-time Markov models).
 
