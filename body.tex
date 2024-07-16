@@ -71,12 +71,9 @@ Most of the flows discussed above are \pc flows, where the total flow between co
 In contrast, \term{absolute flows} are specified in terms of the total flow. 
 Source flows, which have no from compartment, can only be implemented as absolute flows (this is how births are typically implemented \citep{Earn2008}). If population-level vaccination rates are recorded in public health data, it may be simplest to implement these as absolute flows (although specifying an absolute flow from a non-source population may sometimes lead to a mathematically ill-posed model \citep{gharouni2022testing}).
 
+\paragraph{Implementation}
+
 To define a compartmental model, we must specify compartments (nodes) and flows (edges). To specify a flow, we record: a from and a to compartment (one will be empty, for a source or sink flow); a rate type (\pc or total) and a rate function that describes how the rate depends on parameters, time and other flows. 
-
-The dynamics of compartmental models are typically implemented using ordinary differential equations (ODES), although modelers also use other approaches such as discrete-time models or continuous-time Markov processes. No matter what dynamical framework is used, we need to compute the combined rates of flow among compartments. Depending on the framework, these may be combined into a total rate of change of a compartment (as in ODEs) or remain as rates of different processes (as in continuous-time Markov models).
-
-\ben{$\vec{.}$ notation can be ugly, e.g. as in
-  $\fvec^{\text{inf}}$ (collision between arrow and i-dot). Switch to boldface? (Could redefine 'vec' or the 'xvec`/'fvec'/'rvec' macros in ms\_submit.tex)}
 
 When we compute overall rates of change $\vec r(\vec x, \vec f)$, elements of $\fvec$ that correspond to \pc flows will be multiplied by the population of their ``from'' compartment before they are added to $\rvec$; absolute flows are added directly to $\rvec$. Elements in $\fvec$ that correspond to two-sided flows contribute twice to $\rvec$, as a decrease in the population of the ``from'' compartment and an increase in the ``to'' compartment; flows from sources or to sinks contribute only once.
 \jd{I'm not on board with contributing twice: that messes up the ability to Markov. I'm stopping here to send email.}
