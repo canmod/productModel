@@ -46,6 +46,7 @@ latex = pdflatex --shell-escape
 -include makestuff/texi.mk
 
 -include makestuff/git.mk
+-include makestuff/gitbranch.mk
 -include makestuff/visual.mk
 -include makestuff/projdir.mk
 
