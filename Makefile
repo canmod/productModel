@@ -14,9 +14,12 @@ Sources += $(wildcard *.tex *.sh)
 ## ms_submit.pdf: ms_submit.tex abstract.tex Appendices.tex body.tex
 ms_submit.pdf: ms_submit.tex.pdf
 
-ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
+ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex | inkscape.check
 	$(latexnonly)
 	$(CP) ms_submit.tex.aux ms_submit.aux
+
+inkscape.check:
+	inkscape --version || (echo ERROR: inkscape is needed for this project && false)
 
 Ignore += svg-inkscape
 
