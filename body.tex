@@ -34,7 +34,7 @@ In other cases we might prohibit cross-stratum infection, for example by allowin
 
 \section{What is a Compartmental Model?}\label{dcm}
 
-%%  \FloatBarrier %% Why?
+\FloatBarrier %% Why?
 \begin{figure}
     \centering
     \includesvg[inkscapelatex = true, width=\textwidth]{images_redux/SIR_and_Age.svg}
@@ -122,7 +122,7 @@ There are, of course, other ways to handle this kind of parameter simplification
 
 Returning to Figure \ref{fig:sir_age_strat}, recall that the dashed arrow in the SIR model indicates that the flow from $S$ to $I$ is an infected flow and that its magnitude is partly determined by the number of infected people. When we combined the SIR and age models in Figure \ref{fig:simple_sir_age} we omitted dashed arrows. \cite{worden2017products} describe two separate products, each with the dashed lines drawn differently. In their \term{naive product}, each susceptible group can only be infected by infectious people in the same group (Figure \ref{fig:naive_product}). In their \term{modified  product}, each susceptible group can be infected by infectious people in any group (see Figure \ref{fig:modified_product}). 
 
-These two models have the same graph, given by box product of the factor models. They differ only in the form of the infection flows. The graph underlying a product model is not always the box product (or a subset), though: Worden and Porco's \term{strong product} adds additional edges. In the model illustrated in Figure \ref{fig:simple_sir_age}, individuals cannot move directly from the young susceptible compartment to the middle infected one; to make that transition they must either become infected and then age or age and then become infected. In a scenario where strata were determined by infection with multiple infectious pathogens in the same event. Strong products might also be preferred for implementations with discrete time steps, where the probability of two independent events in the same time step cannot be neglected. 
+These two models have the same graph, given by box product of the factor models. They differ only in the form of the infection flows. The graph underlying a product model is not always the box product (or a subset), though: Worden and Porco's \term{strong product} adds additional edges. In the model illustrated in Figure \ref{fig:simple_sir_age}, individuals cannot move directly from the young susceptible compartment to the middle infected one; to make that transition they must take one step first and then the other. If we have strata corresponding to different pathogens, we might use a strong product to allow for the possibility of infection with multiple pathogens in a single event. Strong products might also be preferred for implementations with discrete time steps, where the probability of two independent events in the same time step cannot be neglected. 
 
 \begin{figure}
     \centering
@@ -140,35 +140,12 @@ These two models have the same graph, given by box product of the factor models.
 
 \FloatBarrier
 
-To illustrate the difference between naive and modified products consider an SIR model where the infection flow is given by $\fvec^\text{inf} = \frac{\beta I}{N}$ where $N$, the total population of the model, is constant. In this case the transmission matrix $T$ from Equation \ref{infectionequation} would be the one-by-one matrix $\left[ \beta/N \right]$.
-When moving to the product model, we could either let $T$ be given by the diagonal matrix $\textrm{Diag}(\beta_i/N)$
-%% \[
-%%     T = \begin{bmatrix}
-%%         \frac{\beta_1}{N} & 0 & 0 \\
-%%         0 & \frac{\beta_2}{N} & 0\\
-%%         0 & 0 & \frac{\beta_3}{N}
-%%     \end{bmatrix}
-%% \]
-which would yield the naive product, or we could let $T$ be given most generally by $\left[ \beta_{ij}/N \right]$
-%% \[
-%%     T = \begin{bmatrix}
-%%         \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & \frac{\beta_{13}}{N} \\
-%%         \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N}\\
-%%         \frac{\beta_{31}}{N} & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}
-%%     \end{bmatrix}
-%% \
-(with all $\beta_{ij}>0$), yielding the modified product.
+Age-stratification will typically use a modified product, because people of all ages commonly interact with each other. Spatial stratification can use different approaches. When movement of individuals is simulated explicitly, \cite[e.g.][]{mohammadi2023importation}, it makes sense to use a naive product, where we assume that people in different locations do not physically interact. Models without explicit movement, \cite[e.g.][]{dietz1995structured}, are more suited to a modified product, which would allow people based in different locations to have some amount of contact. 
 
-In the age-stratified example the modified product is likely to be preferred because people of all ages commonly interact with each other. In the case of spatial stratification, one might want to use the naive or the modified product, or another alternative, depending on the specifics of the epidemiological system. At first glance the naive product seems appropriate because it encodes the assumption that people in different locations cannot infect one other because they cannot physically interact. This approach works well in product models that do simulate movement explicitly \cite[e.g.][]{mohammadi2023importation}, where the flows between different locations are included in the original factor model describing spatial structure. Spatial models that model movement implicitly \citep{dietz1995structured} compute the rates of contact between pairs of people who live in different locations during times when one or both are away from. In this case the modified product would seem the most appropriate.
-
-%% BMB: not sure this complexity is worth bringing up?
-%% However, the situation can be even more complex; for example, depending on the scales involved, it may be beneficial to allow contact between people who are either in the same location \emph{or} in neighbouring locations, for some appropriate definition of a neighbourhood. In this case we want to go beyond the naive or modified products to some kind of \define{generalized product}.
-
-The naive product restricts interaction to people in the same stratum; the modified product allows people in any strata to interact. We propose a new, generalized product that allows for people in each stratum to interact with people in an arbitrary subset of the other strata, allowing the creation of models where people at a given location can interact at the same location or neighboring locations, but not globally.
-
-\ben{A lot of the following section seems to be re-inventing network models.  How specific is this to understanding product models? How much detail should we retain?}
+The naive product restricts interaction to people in the same stratum; the modified product allows people in any strata to interact. In many cases, it will be computationally efficient to consider an intermediate “generalized” approach, that allows for people in each stratum to interact with people in “neighboring” strata.
 
 Below we show three different ways an SI model could be stratified with location. Figures \ref{fig:spat_n} and \ref{fig:spat_m} show the naive and modified products respectively. Figure \ref{fig:spat_g} shows a generalized product where interactions can only occur within a single geographic region or between neighboring regions. For example, an infected person in the Toronto region could infect a susceptible person in Toronto or Ottawa but not one in Montreal, while the neighbourhood of an infected person in Ottawa includes all three regions.
+This model is equivalent to, but more efficient than, the modified product with $\beta_{31}$ and $\beta_{13}$ set to zero. 
 
 \FloatBarrier
 
@@ -211,18 +188,6 @@ Below we show three different ways an SI model could be stratified with location
 %%         \frac{\beta_{31}}{N} & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}
 %%     \end{bmatrix}
 %% \]
-
-The only change from the contact matrices defined above for the naive and modified products is that in the case of the generalized product we would set $\beta_{31} = \beta_{13} = 0$ to reflect the impossibility of transmission between Montreal and Toronto.
-%% \[
-%%     T = \begin{bmatrix}
-%%         \frac{\beta_{11}}{N} & \frac{\beta_{12}}{N} & 0 \\
-%%         \frac{\beta_{21}}{N} & \frac{\beta_{22}}{N} & \frac{\beta_{23}}{N} \\
-%%         0 & \frac{\beta_{32}}{N} & \frac{\beta_{33}}{N}  
-%%     \end{bmatrix}
-%% \]
-\ben{I don't really get this. I agree that leaving out a computational term rather than retaining it as a division by zero is slightly better, but this seems fairly trivial/unimportant? Are we losing anything if we delete the following para?}
-
-Ultimately we could treat all such special cases by setting the value of $\beta$ to zero in places where we don't want different strata to interact but in many cases this would result in doing a large amount of unnecessary computational work (e.g. multiplying things by zero) which can significantly increase to time required to simulate a model. For the sake of efficiency it is desirable to think of these products as distinct operations and always use the one that creates the least amount of unnecessary computational baggage. 
 
 \section{Challenging Examples}\label{unco}
 While the operations defined above allow us to construct a wide range of compartmental models by taking products of simpler factor models, they cannot account for every possible combination of models. In this section we discuss a number of examples where the model products we have defined so far are insufficient.
