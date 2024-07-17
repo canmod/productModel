@@ -23,6 +23,11 @@ ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
 	$(latexnonly)
 	$(CP) ms_submit.tex.aux ms_submit.aux
 
+Ignore += inkscape.check
+ms_submit.tex.pdf: | inkscape.check
+inkscape.check:
+	inkscape --version || (echo inkscape is needed for this project && false)
+
 Ignore += svg-inkscape
 
 ######################################################################
