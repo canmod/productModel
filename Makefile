@@ -12,11 +12,7 @@ Sources += README.md
 Sources += $(wildcard *.tex *.sh)
 
 ## ms_submit.pdf: ms_submit.tex abstract.tex Appendices.tex body.tex
-ms_submit.pdf: ms_submit.tex.pdf
-
-ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex
-	$(latexnonly)
-	$(CP) ms_submit.tex.aux ms_submit.aux
+ms_submit.texdeps.mk: abstract.texdeps.mk body.texdeps.mk
 
 Ignore += svg-inkscape
 
@@ -42,7 +38,7 @@ makestuff/%.stamp:
 ## -include makestuff/pipeR.mk
 
 bibtex = bibtex $*
-latex = pdflatex --shell-escape
+latexEngine = pdflatex --shell-escape
 -include makestuff/texj.mk
 
 -include makestuff/git.mk
