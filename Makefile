@@ -43,7 +43,7 @@ makestuff/%.stamp:
 
 bibtex = bibtex $*
 latex = pdflatex --shell-escape
--include makestuff/texi.mk
+-include makestuff/texj.mk
 
 -include makestuff/git.mk
 -include makestuff/gitbranch.mk
