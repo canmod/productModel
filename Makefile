@@ -22,7 +22,8 @@ ms_submit.texdeps.mk: abstract.texdeps.mk body.texdeps.mk
 Ignore += inkscape.check
 ms_submit.tex: | inkscape.check
 inkscape.check:
-	@pinkscape --version || (echo inkscape is needed for this project && false)
+	@echo Checking for inkscape ...
+	@inkscape --version || (echo inkscape is needed for this project && false)
 	@touch $@
 
 Ignore += svg-inkscape
