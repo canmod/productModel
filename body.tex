@@ -217,9 +217,9 @@ we could write the force of infection as $f(\betavec, \xvec)$ where $\betavec$ i
 The weighted states approach is equivalent to the summation method provided $f$ is a linear function. One important instance where this will not be the case is if $f$ involves normalizing by the total population of the model and that population is not constant. To see this let $N(\xvec)$ be a function that sums every component in a vector and let $f(\betavec, \xvec) = \frac{\betavec \cdot \xvec}{N(\xvec)}$. In this example the summation method would produce 
 \begin{equation}\label{summationequation}
 \frac{w_1\betavec_{i}\cdot \xvec_1}{N(\xvec_1} + \ldots + \frac{w_n\betavec_{i}\cdot \xvec_n}{N(\xvec_n)}
-\end{equation}\label{weightedequation}
+\end{equation}
 but the weighted states method would produce
-\begin{equation}
+\begin{equation}\label{weightedequation}
     \frac{\betavec_i \cdot (w_1\xvec_1+\ldots + w_n\xvec_n)}{N(w_1\xvec_1+\ldots + w_n\xvec_n)}
 \end{equation}
 Notice that in Equation \ref{summationequation} each term in the sum is divided by the population of a single stratum whereas in Equation \ref{weightedequation} every term in the numerator is divided by the total (weighted) population of the entire model. 
