@@ -1,3 +1,8 @@
+## This is the productModel canmod github project
+## https://github.com/canmod/productModel.git
+
+######################################################################
+
 current: target
 -include target.mk
 
@@ -14,7 +19,19 @@ Sources += $(wildcard *.tex *.sh)
 ## ms_submit.pdf: ms_submit.tex abstract.tex Appendices.tex body.tex
 ms_submit.texdeps.mk: abstract.texdeps.mk body.texdeps.mk
 
+Ignore += inkscape.check
+ms_submit.tex.pdf: | inkscape.check
+inkscape.check:
+	inkscape --version || (echo inkscape is needed for this project && false)
+	touch $@
+
 Ignore += svg-inkscape
+
+######################################################################
+
+Ignore += main
+main:
+	$(MAKE) main.branchdir
 
 ######################################################################
 
