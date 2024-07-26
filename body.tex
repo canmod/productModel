@@ -194,43 +194,15 @@ This model is equivalent to, but more efficient than, the modified product with 
 %% \]
 
 \section{Examples}\label{unco}
+
 While Cartesian products allow us to construct a wide range of compartmental models, they cannot account for many useful stratified models. In this section we discuss a number of examples where the model products we have defined so far are insufficient.
 
-\subsection{Models with alternate functional forms}\label{aff}
-
-\ben{I think this section can be simplified/clarified/better motivated, but not sure how yet (start with examples? STD models with varying mixing rates? Frequency-dependent infection? Are we really thinking about incidence here, or could we equivalently talk about forces of infection?)}
-
-Up till now we have assumed that the force of infection on a particular susceptible compartment (and hence the absolute rate of infection of those susceptibles) is a linear function of the numbers of people in the infectious compartments ($\vec{\Lambda} = \frac{\beta}{N} C \vec{I}$). This formulation makes two related assumptions: (1) that the force of infection due to each infectious compartment is strictly proportional to that compartment's occupancy, and does not depend on any other compartments; (2) that the forces of infection can be summed to get the total force of infection.
-
-\ben{still trying to figure out how to put this section together sensibly. Some practical examples that occur to me:
-  \begin{itemize}
-  \item a behavioural model where the FOI decreases with increasing hospital occupancy (or hospitalization rate, or mortality rate, or \ldots). Now FOI will depend (nonlinearly) on non-infectious compartments. When we create the product model, are those influences local to a stratum or global (e.g., do people pay attention to the population-wide mortality rate, or only to the mortality rate in their age group?)
-  \item incidences of the form $S^{\alpha_s} I^{\alpha_I}$
-  \item frequency-dependent infection (with non-constant population sizes)
-  \item F-D plus activity-weighted mixing, as in STD models: the relevant value is an activity-weighted average, $\sum_j \beta_{ij} c_j I_j/\sum c_j N_j$ (or something like that)
-  \end{itemize}
-  Can we connect what's already here with these ideas?
-}  
-we could write the force of infection as $f(\betavec, \xvec)$ where $\betavec$ is a parameter vector and $\xvec$ is the complete state vector. Than suppose we stratified this factor model by age so the state vector of the product model is $\xvec = (\xvec_1, \ldots, \xvec_n)$ where the subscripts denote components that belong to separate age strata. Then the \pc rate rate of infection for age stratum $i$ in the product model will be $f(\betavec_{i1}, \xvec_1) + \ldots + f(\betavec_{in}, \xvec_n)$. An alternate approach would be to instead take a weighted average of the compartment populations in each stratum and use this new average as the input to the flow rate function. Using this idea the \pc rate of new infections for age strata $i$ would be $f(\betavec, w_{i1}\xvec_1 + \ldots + w_{in}\xvec_n)$ where the $w$'s are weights. This approach is particularly useful when incorporating inhibitory influences in a model. For example, during an epidemic, individuals will be more careful if they know hospitals are at capacity than they would be when there are ample medical resources available. 
-
-The weighted states approach is equivalent to the summation method provided $f$ is a linear function. One important instance where this will not be the case is if $f$ involves normalizing by the total population of the model and that population is not constant. To see this let $N(\xvec)$ be a function that sums every component in a vector and let $f(\betavec, \xvec) = \frac{\betavec \cdot \xvec}{N(\xvec)}$. In this example the summation method would produce 
-\begin{equation}\label{summationequation}
-\frac{w_1\betavec_{i}\cdot \xvec_1}{N(\xvec_1} + \ldots + \frac{w_n\betavec_{i}\cdot \xvec_n}{N(\xvec_n)}
-\end{equation}
-but the weighted states method would produce
-\begin{equation}\label{weightedequation}
-    \frac{\betavec_i \cdot (w_1\xvec_1+\ldots + w_n\xvec_n)}{N(w_1\xvec_1+\ldots + w_n\xvec_n)}
-\end{equation}
-Notice that in Equation \ref{summationequation} each term in the sum is divided by the population of a single stratum whereas in Equation \ref{weightedequation} every term in the numerator is divided by the total (weighted) population of the entire model. 
-
-Another case where the two approaches may differ is when using non-linear incidence rates. Typically in an SIR model the \pc rate of infection is given by $\frac{\beta I}{N}$ however in some cases it might be desirable to use $\frac{\beta S^\kappa I}{N^{\kappa +1}}$. Here again the two approaches will produce different results. 
-
-Of course the two approaches are not mutually exclusive, we could find each stratum's contribution to the total number of newly infected people using the sum of weighted states rather than just the state vector for that specific stratum. In fact the summation approach is equivalent to doing that using the weights $w_j = \delta_{ij}$ where $\delta$ is the Kronecker delta function. 
+\subsection{Linear Chains}\label{chains}
 
 
 \subsection{Models with Testing}\label{testing}
 
-One such example (where simple model products alone seem insufficient) involves modeling the effects of testing for infection, inspired by the dynamics of testing during the COVID-19 pandemic \citep{gharouni2022testing}. Consider the epidemiological model in Figure \ref{fig:testify_epi} and the testing process depicted in Figure \ref{fig:testify_states}. The modified product of these two models includes a compartment for untested individuals at the hospital. However, this product is not what we want (Figure \ref{fig:testify_desired}). 
+One such example involves modeling the effects of testing for infection, inspired by the dynamics of testing during the COVID-19 pandemic \citep{gharouni2022testing}. Consider the epidemiological model in Figure \ref{fig:testify_epi} and the testing process depicted in Figure \ref{fig:testify_states}. The modified product of these two models includes a compartment for untested individuals at the hospital. However, this product is not what we want (Figure \ref{fig:testify_desired}). 
 The key difference is that untested individuals entering the hospital are typically tested (i.e., moved from ``untested'' to ``awaiting results''); in our model, we will assume that they are always tested.
 Therefore, the ``untested hospitalized" compartment in product model is always empty; the flow that goes to that compartment should instead be directed to the ``hospitalized/awaiting test result" compartment. Constructing the desired model would thus require an extra step to redirect this flow and remove the superfluous compartment.
 
@@ -261,6 +233,7 @@ Therefore, the ``untested hospitalized" compartment in product model is always e
 
 
 \subsection{Multistrain Models and a Weak Product}\label{wp}
+
 Many epidemics involve multiple co-circulating strains of the same pathogen \citep{gog2002dynamics, williams2021localization}. In the case of COVID-19 such variants have significant implications for the efficacy of vaccines \citep{abu2021effectiveness, koyama2020emergence} and diagnostic tests \citep{vasireddy2021review}. In more complex models, including multiple strains rapidly inflates the size of both the state space and the parameter space \citep{kryazhimskiy2007state}. One way to limit the size of these unwieldy models while continuing to include the effects of multiple strains in our model is to disallow the possibility of superinfection (i.e., an individual being infected with multiple strains at the same time). \ben{should we worry about distinguishing superinfection (infection A then B) vs coinfection (simultaneous inf with A and B)?} It would therefore be useful to define a weak product similar to the operations proposed by \cite{worden2017products} but which excludes all states corresponding to a superinfected status. One way to do this, which works well for two-strain models, is to use the standard Cartesian product but include only flows that emanate from compartments with no inflow (\term{sources}) or enter compartments with no outflow (\term{sinks}). Flows in this category typically represent initial infection (i.e., flows out of a susceptible class that is a source) or final recovery (i.e., flows into a recovered class that is a sink). In making this restriction, we exclude all the flows within the set of compartments that represent infected states, such as from an exposed to an infected compartment).
 For convenience we denote this operation by $\boxplus$ and call it the \term{weak product}.
 
@@ -318,6 +291,19 @@ If there are relatively few such compartments a modeler may choose simply to lea
 \end{figure}
 
 \FloatBarrier
+
+\subsection{Levels of immunity}\label{immunity}
+
+\subsection{STD models}\label{std}
+
+\steve{
+    These are some ideas from Ben about STD models. I've deleted the section that they originally appeared in.
+    
+    STD models with varying mixing rates?
+    
+    Activity-weighted mixing, as in STD models: the relevant value is an activity-weighted average, $\sum_j \beta_{ij} c_j I_j/\sum c_j N_j$ (or something like that)
+}
+
 \section{Conclusion}\label{conc}
 
 Adding new strata to simple epidemiological models is closely related to taking the Cartesian product of digraphs. Modellers who want to combine sets of simple models into a single large stratified model would benefit from a toolkit based on well-defined mathematical operations. This toolkit must contain a variety of operations representing a useful subset of the numerous ways that separate strata in a model can interact. Ideally, it should also be specified in such a way that it can act \emph{automatically}, once users have clearly specified which set of rules should be used for constructing the model product. We have developed a mathematical formalism for defining such operations and used it to restate two previously proposed model operations, the naive and modified products, which represent extremes of a spectrum of interactions between strata. The naive product corresponds to the case where different strata never interact, while the modified product corresponds to scenarios where any stratum can interact with any other stratum. We generalize these previously proposed operations to a third operation that allows any level of interaction between model strata, for example to construct geographically stratified models where interactions can occur within a single location and its neighbours but not more distantly.
