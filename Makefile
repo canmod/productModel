@@ -63,4 +63,3 @@ latexEngine = pdflatex --shell-escape
 -include makestuff/gitbranch.mk
 -include makestuff/visual.mk
 -include makestuff/projdir.mk
-
