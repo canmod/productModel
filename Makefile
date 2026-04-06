@@ -30,9 +30,6 @@ inkscape.check:
 	@inkscape --version || (echo inkscape is needed for this project && false)
 	@touch $@
 
-inkscape.check:
-	inkscape --version || (echo ERROR: inkscape is needed for this project && false)
-
 Ignore += svg-inkscape
 
 ######################################################################
