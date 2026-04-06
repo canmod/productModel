@@ -1,3 +1,8 @@
+## This is the productModel canmod github project
+## https://github.com/canmod/productModel.git
+
+######################################################################
+
 current: target
 -include target.mk
 
@@ -12,16 +17,29 @@ Sources += README.md
 Sources += $(wildcard *.tex *.sh)
 
 ## ms_submit.pdf: ms_submit.tex abstract.tex Appendices.tex body.tex
-ms_submit.pdf: ms_submit.tex.pdf
+ms_submit.texdeps.mk: abstract.texdeps.mk body.texdeps.mk
 
 ms_submit.tex.pdf: ms_submit.tex body.tex abstract.tex Appendices.tex | inkscape.check
 	$(latexnonly)
 	$(CP) ms_submit.tex.aux ms_submit.aux
 
+Ignore += inkscape.check
+ms_submit.tex: | inkscape.check
+inkscape.check:
+	@echo Checking for inkscape ...
+	@inkscape --version || (echo inkscape is needed for this project && false)
+	@touch $@
+
 inkscape.check:
 	inkscape --version || (echo ERROR: inkscape is needed for this project && false)
 
 Ignore += svg-inkscape
+
+######################################################################
+
+Ignore += main
+main:
+	$(MAKE) main.branchdir
 
 ######################################################################
 
@@ -34,7 +52,7 @@ Sources += Makefile
 Ignore += makestuff
 msrepo = https://github.com/dushoff
 
-Makefile: makestuff/00.stamp
+Makefile: makestuff/02.stamp
 makestuff/%.stamp:
 	- $(RM) makestuff/*.stamp
 	(cd makestuff && $(MAKE) pull) || git clone --depth 1 $(msrepo)/makestuff
@@ -45,11 +63,10 @@ makestuff/%.stamp:
 ## -include makestuff/pipeR.mk
 
 bibtex = bibtex $*
-latex = pdflatex --shell-escape
--include makestuff/texi.mk
+latexEngine = pdflatex --shell-escape
+-include makestuff/texj.mk
 
 -include makestuff/git.mk
 -include makestuff/gitbranch.mk
 -include makestuff/visual.mk
 -include makestuff/projdir.mk
-
